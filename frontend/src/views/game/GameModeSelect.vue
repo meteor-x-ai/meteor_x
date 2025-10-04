@@ -30,9 +30,9 @@
                 </div>
             </template>
             <template v-else-if="currentMode === 'create'">
-                <div v-if="createdCoopCode">Code: {{createdCoopCode}}</div>
+                <div v-if="roomInfo.code">Code: {{roomInfo.code}}</div>
                 <span v-else>Code: <span class="code--loading">loading...</span></span>
-                <span v-if="createdCoopCode">Users ↓</span>
+                <span v-if="roomInfo.code">Users ↓</span>
                 <div
                     class="user--container"
                     :class="{'current': user.id === currentUser?.id}"
@@ -42,7 +42,26 @@
                     {{i+1}}.{{user.username}}
                 </div>
                 <div class="button__container">
-                    <button class="game--mode__button" @click="handleReturn">Return</button>
+                    <button class="game--mode__button" @click="handleReturn">Cancel</button>
+                    <button
+                        class="game--mode__button"
+                        v-if="roomInfo.id"
+                        :disabled="users.length !== 4"
+                    >
+                        Start
+                    </button>
+                </div>
+            </template>
+            <template v-else-if="currentMode === 'room'">
+                <span>Code: {{roomInfo.code}}</span>
+                <span>Users ↓</span>
+                <div
+                    class="user--container"
+                    :class="{'current': user.id === currentUser?.id}"
+                    @click="removeUser(user.id)"
+                    v-for="(user, i) in users"
+                >
+                    {{i+1}}.{{user.username}}
                 </div>
             </template>
         </div>
@@ -71,7 +90,7 @@
 
 <script setup lang="ts">
 import "@/css/game-mode-page.css"
-import {onBeforeMount, onMounted, onUnmounted, ref, watch} from "vue";
+import {onBeforeMount, onUnmounted, reactive, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {io, Socket} from "socket.io-client";
 import {BACK_PATH_WS} from "@/repository/backendPath.ts";
@@ -82,7 +101,7 @@ import type {iUser} from "@/models/user-models.ts";
 const route = useRoute();
 const router = useRouter();
 
-type modes = 'select' | 'coop' | 'create'
+type modes = 'select' | 'coop' | 'create' | 'room'
 
 const currentMode = ref<modes>('select')
 const currentUser = ref<iUser | null>(null);
@@ -90,8 +109,13 @@ const currentUser = ref<iUser | null>(null);
 const socket = ref<Socket | null>(null);
 const users = ref<iUser[]>([])
 
-const createdCoopCode = ref<string>("")
-const createdCoopId = ref<string>("")
+const roomInfo = reactive<{
+    code: string,
+    id: string,
+}>({
+    code: "",
+    id: ""
+})
 const roomCodeInput = ref<string>("")
 
 const pendingAuth = ref<boolean>(true);
@@ -103,6 +127,9 @@ const changeQueryMode = () => {
         delete newQuery.mode;
     } else {
         newQuery.mode = currentMode.value;
+    }
+    if (currentMode.value !== 'room' && currentMode.value !== 'create') {
+        delete newQuery.code;
     }
 
     router.replace({
@@ -127,7 +154,7 @@ const initializeSocket = () => {
     newSocket.on("room_changed", (data) => {
         switch (data.type) {
             case eGameRoomChangedTypes.USER_ADDED:
-                console.log(data)
+                if (data.userId === currentUser.value?.id) return;
                 users.value.push({
                     id: data.userId,
                     username: data.username
@@ -156,8 +183,8 @@ const cleanupSocket = () => {
         socket.value.disconnect();
         socket.value = null;
         users.value = [];
-        createdCoopCode.value = "";
-        createdCoopId.value = "";
+        roomInfo.code = "";
+        roomInfo.id = "";
     }
 };
 
@@ -168,27 +195,44 @@ const handleReturn = () => {
 
 const codeManipulations = async () => {
     if (currentMode.value === "create" && !socket.value) {
-        try {
-            const newSocket = initializeSocket();
+        if (false) {
+            //TODO connect by code from query
+        } else {
+            try {
+                const newSocket = initializeSocket();
 
-            newSocket.on("connect", () => {
-                newSocket.emit("join_room");
-            });
+                newSocket.on("connect", () => {
+                    newSocket.emit("join_room");
+                });
 
-            newSocket.on("room_created", (data) => {
-                createdCoopId.value = data.roomId;
-                createdCoopCode.value = data.code;
-            });
+                newSocket.on("room_created", async (data) => {
+                    roomInfo.id = data.roomId;
+                    roomInfo.code = data.code;
+                    users.value = [{
+                        username: `${currentUser.value?.username} (You)`,
+                        id: currentUser.value?.id || ''
+                    }]
+                    await router.replace({
+                        path: route.path,
+                        query: {
+                            ...route.query,
+                            code: data.code
+                        }
+                    })
+                });
 
-            newSocket.on("lobby_update", (data) => {
-                console.log("Lobby update:", data);
-            });
+                newSocket.on("lobby_update", (data) => {
+                    console.log("Lobby update:", data);
+                });
 
-        } catch (error) {
-            console.error("Error creating room:", error);
+            } catch (error) {
+                console.error("Error creating room:", error);
+            }
         }
+    } else if (currentMode.value === 'room') {
+
     } else {
-        createdCoopCode.value = ""
+        roomInfo.code = ""
     }
 }
 
@@ -201,7 +245,12 @@ const joinRoom = async () => {
         });
 
         newSocket.on("room_joined", (data) => {
-            console.log("Room joined:", data);
+            console.log(data)
+            users.value = data.users;
+            roomInfo.id = data.roomId;
+            console.log(data.code)
+            roomInfo.code = data.code;
+            currentMode.value = 'room';
         });
 
     } catch (error) {
@@ -221,7 +270,6 @@ watch(currentMode, () => {
 onBeforeMount(async () => {
     currentUser.value = await authRepo.auth();
 
-    //TODO как то сохранять что бы в случае успеха норм редирекило
     if (currentUser.value && (route.query.mode === 'coop' || route.query.mode === 'create')) {
         currentMode.value = route.query.mode as modes;
     }
