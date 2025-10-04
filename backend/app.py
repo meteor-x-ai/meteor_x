@@ -1,9 +1,29 @@
-from flask import Flask, jsonify, request
-import json, os
+from flask import Flask, request, jsonify, make_response
+from flask_cors import CORS
+import firebase_admin
+from flask_socketio import SocketIO, join_room, emit
+from firebase_admin import credentials, firestore
 from services.gemini_service import generate_from_prompt
+import bcrypt
+import random
+import string
+import json
+import uuid
+import os
 
 app = Flask(__name__)
+CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
+
+cred = credentials.Certificate("firebase-adminsdk.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
+
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+
+# Path to the meteors data file
 data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'meteors.json')
+
+# test, test -- auth
 
 @app.route('/api/meteors', methods=['GET'])
 def get_meteors():
@@ -29,5 +49,167 @@ def prompt_handler():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/auth', methods=['GET'])
+def is_user_logged_in():
+    user_id = request.cookies.get("userId")
+    if not user_id:
+        return False
+
+    user_ref = db.collection("users").document(user_id)
+    if not user_ref.get().exists:
+        return False
+
+    return True
+
+@app.route('/api/signup', methods=['POST'])
+def register_user():
+    try:
+        data = request.json
+        username = data.get('username')
+        password = data.get('password')
+
+        if not username or not password:
+            return jsonify({"error": "bad request"}), 400
+
+        users_ref = db.collection("users")
+        query = users_ref.where("username", "==", username).stream()
+        if any(query):
+            return jsonify({"error": "Username already exists"}), 400
+
+        hashed_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+
+        user_id = str(uuid.uuid4())
+
+        users_ref.document(user_id).set({
+            "username": username,
+            "password": hashed_pw.decode(),
+            "createdAt": firestore.SERVER_TIMESTAMP
+        })
+
+        resp = make_response(jsonify({"status": "success", "userId": user_id}))
+        resp.set_cookie("userId", user_id, httponly=True)
+        return resp
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/login', methods=['POST'])
+def login_user():
+    try:
+        data = request.json
+        username = data.get("username")
+        password = data.get("password")
+
+        if not username or not password:
+            return jsonify({"error": "Username and password are required"}), 400
+
+        users_ref = db.collection("users")
+        query = users_ref.where("username", "==", username).stream()
+
+        user_doc = None
+        for doc in query:
+            user_doc = doc
+            break
+
+        if not user_doc:
+            return jsonify({"error": "User not found"}), 404
+
+        user_data = user_doc.to_dict()
+        hashed_pw = user_data.get("password").encode("utf-8")
+
+        if bcrypt.checkpw(password.encode("utf-8"), hashed_pw):
+            resp = make_response(jsonify({"status": "success", "userId": user_doc.id}))
+            resp.set_cookie("userId", user_doc.id, httponly=True)
+            return resp
+        else:
+            return jsonify({"error": "Invalid password"}), 401
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# -------------------- GAME --------------------
+
+@app.route('/api/coop/create', methods=['POST'])
+def create_room():
+    user_id = request.cookies.get('userId')
+    if not user_id:
+        return jsonify({"error": "Not authenticated"}), 401
+
+    room_code = generate_room_code()
+    room_id = str(uuid.uuid4())
+
+    db.collection("rooms").document(room_id).set({
+        "code": room_code,
+        "users": [user_id],
+        "status": "waiting",
+        "createdAt": firestore.SERVER_TIMESTAMP
+    })
+
+    return jsonify({"roomId": room_id, "code": room_code})
+
+@app.route('/api/coop/join', methods=['POST'])
+def join_room_http():
+    user_id = request.cookies.get("userId")
+    if not user_id:
+        return jsonify({"error": "Not authenticated"}), 401
+
+    data = request.json
+    code = data.get("code")
+    if not code:
+        return jsonify({"error": "Room code is required"}), 400
+
+    rooms_ref = db.collection("rooms")
+    query = rooms_ref \
+        .where("code", "==", code) \
+        .where("status", "==", "waiting") \
+        .stream()
+
+    room_doc = None
+    for doc in query:
+        room_data = doc.to_dict()
+        if len(room_data["users"]) < 4:
+            room_doc = doc
+            break
+
+    if not room_doc:
+        return jsonify({"error": "Room not found"}), 404
+
+    room_data = room_doc.to_dict()
+    if user_id not in room_data["users"]:
+        room_data["users"].append(user_id)
+        rooms_ref.document(room_doc.id).update({"users": room_data["users"]})
+
+    return jsonify({"roomId": room_doc.id, "users": room_data["users"]})
+
+
+def generate_room_code(length=4):
+    return ''.join(random.choices(string.digits, k=length))
+
+# -------------------- GAME SOCKET --------------------
+
+@socketio.on('join_lobby')
+def handle_join_lobby(data):
+    user_id = request.cookies.get('userId')
+    room_id = data.get('roomId')
+    if not room_id or not user_id:
+        return
+
+    join_room(room_id)
+
+    room_doc = db.collection("rooms").document(room_id).get()
+    if not room_doc.exists:
+        emit("error", {"message": "Room not found"}, to=request.sid)
+        return
+
+    room_data = room_doc.to_dict()
+    if user_id not in room_data["users"]:
+        room_data["users"].append(user_id)
+        db.collection("rooms").document(room_id).update({"users": room_data["users"]})
+
+    emit("lobby_update", {"users": room_data["users"]}, room=room_id)
+
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    from flask_socketio import SocketIO
+
+    socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+    socketio.run(app, debug=True, port=5000, allow_unsafe_werkzeug=True)

@@ -1,7 +1,14 @@
 :root {
     --white-n: 255, 255, 255;
     --white: rgb(var(--white-n));
-    --black: rgb(0, 0, 0);
+    --black-n: 0, 0, 0;
+    --black: rgb(var(--black-n));
+
+    --green-n: 1, 163, 1;
+    --green: rgb(var(--green-n));
+
+    --red: red;
+    --yellow: yellow;
 
     --border-sm: 10px;
     --border-md: calc(var(--border-sm) * 2);
@@ -15,7 +22,9 @@
     --bacdrop-filter-sm: blur(4px);
     --bacdrop-filter-md: blur(12px);
 
-    --font-md: .9rem;
+    --font-md: 16px;
+    --font-lg: 40px;
+
     --tr-duration: .2s;
 }
 
@@ -37,10 +46,15 @@ button {
     user-select: none;
 }
 
+ol {
+    margin: 0;
+    padding: 0;
+}
+
 .game--mode__page {
     width: 100%;
     height: 100dvh;
-    background-image: url("/game-background.png");
+    background-image: url("/game-background.jpg");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
