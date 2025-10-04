@@ -175,7 +175,7 @@ const showMap = computed(() => currentZoom.value >= 8)
 const canMeteor = computed(() =>
     meteor.mass !== null && Number(meteor.mass) > 0 &&
     meteor.speed !== null && Number(meteor.speed) > 0 &&
-    meteor.angle !== null && Number(meteor.angle) > 0 &&
+    meteor.angle !== null && Number(meteor.angle) >= 0 &&
     meteor.type !== null &&
     meteor.material !== null &&
     meteor.weather !== null &&
