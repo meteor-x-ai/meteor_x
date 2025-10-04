@@ -73,6 +73,9 @@
 
         <teleport to="body">
             <div v-if="!watchMode" class="meteor--tools__container">
+                <router-link :to="{name: 'main-page'}" class="meteor--info__link">
+                    <img class="meteor--info__link--img" src="/home.svg" alt=""> Menu
+                </router-link>
                 <button @click="setWatchMode" class="meteor--info__link">
                     <img class="meteor--info__link--img" src="/watch.svg" alt=""> Watch Mode
                 </button>

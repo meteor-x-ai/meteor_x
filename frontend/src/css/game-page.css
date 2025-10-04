@@ -1,0 +1,36 @@
+.card--container {
+    position: fixed;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.card--item {
+    padding: 15px;
+    color: var(--white);
+
+    background-color: var(--bg-color-container);
+    border: 1px solid var(--white);
+    backdrop-filter: blur(3px);
+    border-radius: var(--border-md);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: center;
+}
+
+.card--name {
+    font-size: 20px;
+    text-align: center;
+}
+
+.card--image {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: var(--border-md);
+}

@@ -12,7 +12,6 @@
     --bg-color-disable: rgba(var(--white-n), 0.1);
     --bg-color-container: rgba(var(--white-n), 0.2);
 
-
     --bacdrop-filter-sm: blur(4px);
     --bacdrop-filter-md: blur(12px);
 
@@ -36,4 +35,13 @@ html, body {
 
 button {
     user-select: none;
+}
+
+.game--mode__page {
+    width: 100%;
+    height: 100dvh;
+    background-image: url("/game-background.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
