@@ -20,7 +20,7 @@ db = firestore.client()
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
-# Path to the meteors data file
+# Path to the meteor data file
 data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'meteors.json')
 
 """ In-memory store for active games """
@@ -38,7 +38,7 @@ def generate_random_meteor():
     meteors = load_meteors()
     if not meteors:
         return None
-    
+
     meteor = random.choice(meteors)
     game_meteor = {
         "id": random.randint(1000, 9999),
@@ -245,12 +245,12 @@ def handle_join_lobby(data):
         return
 
     room_id = data.get('roomId')
-    
+
     # If no roomId provided, create a new room
     if not room_id:
         room_code = generate_room_code()
         room_id = str(uuid.uuid4())
-        
+
         # Create new room in Firebase
         db.collection("rooms").document(room_id).set({
             "code": room_code,
@@ -258,64 +258,64 @@ def handle_join_lobby(data):
             "status": "waiting",
             "createdAt": firestore.SERVER_TIMESTAMP
         })
-        
+
         # Join the socket room
         join_room(room_id)
-        
+
         # Get username
         username = get_username_by_id(user_id)
-        
+
         # Return room info to the creator
         emit("lobby_created", {
             "roomId": room_id,
             "code": room_code,
             "users": [user_id]
         }, to=request.sid)
-        
+
         # Notify about user addition (even though it's just creator)
         emit("room_changed", {
             "userId": user_id,
             "username": username,
             "type": "USER_ADDED"
         }, room=room_id)
-        
+
         return
-    
+
     # Joining existing room
     join_room(room_id)
-    
+
     # Get room from Firebase
     room_doc = db.collection("rooms").document(room_id).get()
     if not room_doc.exists:
         emit("error", {"message": "Room not found"}, to=request.sid)
         return
-    
+
     room_data = room_doc.to_dict()
-    
+
     # Check if room is still waiting and not full
     if room_data.get("status") != "waiting":
         emit("error", {"message": "Room is no longer accepting players"}, to=request.sid)
         return
-    
+
     if len(room_data["users"]) >= 4:
         emit("error", {"message": "Room is full"}, to=request.sid)
         return
-    
+
     # Add user to room if not already there
     if user_id not in room_data["users"]:
         room_data["users"].append(user_id)
         db.collection("rooms").document(room_id).update({"users": room_data["users"]})
-        
+
         # Get username
         username = get_username_by_id(user_id)
-        
+
         # Notify all users in room about new user
         emit("room_changed", {
             "userId": user_id,
             "username": username,
             "type": "USER_ADDED"
         }, room=room_id)
-    
+
     # Send current room state to the joining user
     emit("lobby_joined", {
         "roomId": room_id,
@@ -327,38 +327,38 @@ def handle_join_lobby(data):
 def handle_start_game(data):
     user_id = request.cookies.get('userId')
     room_id = data.get('roomId')
-    
+
     if not room_id or not user_id:
         emit("error", {"message": "Invalid request"}, to=request.sid)
         return
-    
+
     # Get room from Firebase
     room_doc = db.collection("rooms").document(room_id).get()
     if not room_doc.exists:
         emit("error", {"message": "Room not found"}, to=request.sid)
         return
-    
+
     room_data = room_doc.to_dict()
-    
+
     # Check if user is in the room
     if user_id not in room_data.get("users", []):
         emit("error", {"message": "User not in room"}, to=request.sid)
         return
-    
+
     # Check room status
     if room_data.get("status") != "waiting":
         emit("error", {"message": "Game already started or ended"}, to=request.sid)
         return
-    
+
     # Check if enough users (exactly 4)
     users = room_data.get("users", [])
     if len(users) != 4:
         emit("error", {"message": f"Need exactly 4 players to start. Currently: {len(users)}"}, to=request.sid)
         return
-    
+
     # Update room status to "starting" in Firebase
     db.collection("rooms").document(room_id).update({"status": "starting"})
-    
+
     # Send game_redirect to all users in the room
     emit("game_redirect", {
         "message": "Game is starting!",
@@ -370,43 +370,43 @@ def handle_start_game(data):
 def handle_leave_lobby(data):
     user_id = request.cookies.get('userId')
     room_id = data.get('roomId')
-    
+
     if not room_id or not user_id:
         emit("error", {"message": "Invalid request"}, to=request.sid)
         return
-    
+
     try:
         room_doc = db.collection("rooms").document(room_id).get()
         if not room_doc.exists:
             return
-        
+
         room_data = room_doc.to_dict()
         if user_id not in room_data.get("users", []):
             return
-        
+
         # Remove user from room
         updated_users = [uid for uid in room_data["users"] if uid != user_id]
-        
+
         if len(updated_users) == 0:
             # Delete empty room
             db.collection("rooms").document(room_id).delete()
         else:
             # Update room with remaining users
             db.collection("rooms").document(room_id).update({"users": updated_users})
-            
+
             # Get username for notification
             username = get_username_by_id(user_id)
-            
+
             # Notify remaining users about user leaving
             emit("room_changed", {
                 "userId": user_id,
                 "username": username,
                 "type": "USER_REMOVED"
             }, room=room_id)
-        
+
         # Confirm to the leaving user
         emit("lobby_left", {"message": "Successfully left lobby"}, to=request.sid)
-        
+
     except Exception as e:
         print(f"Error leaving lobby: {e}")
         emit("error", {"message": "Failed to leave lobby"}, to=request.sid)
@@ -416,27 +416,27 @@ def handle_join_game(data):
     user_id = request.cookies.get('userId')
     room_id = data.get('roomId')
     user_ids = data.get('userIds', [])
-    
+
     if not room_id or not user_id:
         emit("error", {"message": "Invalid request"}, to=request.sid)
         return
-    
+
     join_room(room_id)
-    
+
     if len(user_ids) != 4:
         emit("error", {"message": "Game requires exactly 4 players"}, to=request.sid)
         return
-    
+
     if user_id not in user_ids:
         emit("error", {"message": "User not in game"}, to=request.sid)
         return
-    
+
     if room_id not in active_games:
         meteor = generate_random_meteor()
         if not meteor:
             emit("error", {"message": "Failed to generate meteor"}, to=request.sid)
             return
-            
+
         active_games[room_id] = {
             "users": user_ids,
             "player_hp": {uid: 3 for uid in user_ids},  # Everyone starts with 3 HP
@@ -445,26 +445,26 @@ def handle_join_game(data):
             "status": "active",
             "round": 1
         }
-        
+
         db.collection("rooms").document(room_id).update({"status": "active"})
-        
+
         emit("game_started", {
             "message": "Game has started!",
             "meteor": meteor,
             "round": 1
         }, room=room_id)
-    
+
     try:
         user_position = user_ids.index(user_id)
         game_state = active_games[room_id]
-        
+
         emit("player_info", {
             "position": user_position,
             "hp": game_state["player_hp"][user_id],
             "meteor": game_state["current_meteor"],
             "round": game_state["round"]
         }, to=request.sid)
-        
+
     except ValueError:
         emit("error", {"message": "User not found in game"}, to=request.sid)
 
@@ -473,53 +473,53 @@ def handle_card_chosen(data):
     user_id = request.cookies.get('userId')
     room_id = data.get('roomId')
     chosen_card = data.get('card')
-    
+
     if not room_id or not user_id or not chosen_card:
         emit("error", {"message": "Invalid request"}, to=request.sid)
         return
-    
+
     # Check if game exists
     if room_id not in active_games:
         emit("error", {"message": "Game not found"}, to=request.sid)
         return
-    
+
     game_state = active_games[room_id]
-    
+
     # Check if user is in the game
     if user_id not in game_state["users"]:
         emit("error", {"message": "User not in game"}, to=request.sid)
         return
-    
+
     # Check if player is still alive
     if game_state["player_hp"][user_id] <= 0:
         emit("error", {"message": "Player is already eliminated"}, to=request.sid)
         return
-    
+
     # Check if card choice is correct
     correct_card = game_state["correct_card"]
     is_correct = chosen_card == correct_card
-    
+
     # Update HP if wrong choice
     if not is_correct:
         game_state["player_hp"][user_id] -= 1
-    
+
     # Check how many lives left
     remaining_hp = game_state["player_hp"][user_id]
-    
+
     # Check if any players are still alive
     alive_players = [uid for uid, hp in game_state["player_hp"].items() if hp > 0]
-    
+
     if len(alive_players) == 0 or remaining_hp == 0:
         # Game over - all players dead or this player died
         game_state["status"] = "ended"
-        
+
         # Remove from active games
         if room_id in active_games:
             del active_games[room_id]
-        
+
         # Update room status in database
         db.collection("rooms").document(room_id).update({"status": "ended"})
-        
+
         emit("game_ended", {
             "message": "GAME_ENDED",
             "reason": "All players eliminated" if len(alive_players) == 0 else "You have been eliminated",
@@ -527,7 +527,7 @@ def handle_card_chosen(data):
             "chosen_card": chosen_card,
             "final_hp": game_state["player_hp"]
         }, room=room_id)
-        
+
     else:
         # Game continues - generate new meteor for next round
         new_meteor = generate_random_meteor()
@@ -535,7 +535,7 @@ def handle_card_chosen(data):
             game_state["current_meteor"] = new_meteor
             game_state["correct_card"] = get_correct_card_for_meteor(new_meteor)
             game_state["round"] += 1
-            
+
             # Send game state update to all players
             emit("game_update", {
                 "message": "Round continues",
@@ -556,14 +556,14 @@ def handle_disconnect():
     user_id = request.cookies.get('userId')
     if not user_id:
         return
-    
+
     # Clean up active games
     rooms_to_clean = []
     for room_id, game_state in active_games.items():
         if user_id in game_state["users"]:
             # Mark player as disconnected by setting HP to 0
             game_state["player_hp"][user_id] = 0
-            
+
             # Check if game should end
             alive_players = [uid for uid, hp in game_state["player_hp"].items() if hp > 0]
             if len(alive_players) == 0:
@@ -579,40 +579,40 @@ def handle_disconnect():
                     "player_hp": game_state["player_hp"],
                     "alive_players": alive_players
                 }, room=room_id)
-    
+
     # Clean up ended games
     for room_id in rooms_to_clean:
         if room_id in active_games:
             del active_games[room_id]
         db.collection("rooms").document(room_id).update({"status": "ended"})
-    
+
     # Clean up waiting rooms (remove user from rooms in waiting state)
     try:
         rooms_ref = db.collection("rooms")
         waiting_rooms = rooms_ref.where("status", "==", "waiting").stream()
-        
+
         for room_doc in waiting_rooms:
             room_data = room_doc.to_dict()
             if user_id in room_data.get("users", []):
                 updated_users = [uid for uid in room_data["users"] if uid != user_id]
-                
+
                 if len(updated_users) == 0:
                     # Delete empty room
                     rooms_ref.document(room_doc.id).delete()
                 else:
                     # Update room with remaining users
                     rooms_ref.document(room_doc.id).update({"users": updated_users})
-                    
+
                     # Get username for notification
                     username = get_username_by_id(user_id)
-                    
+
                     # Notify remaining users about user leaving
                     emit("room_changed", {
                         "userId": user_id,
                         "username": username,
                         "type": "USER_REMOVED"
                     }, room=room_doc.id)
-                
+
                 break  # User should only be in one waiting room
     except Exception as e:
         print(f"Error cleaning up waiting rooms: {e}")
@@ -621,21 +621,21 @@ def handle_disconnect():
 def handle_get_game_state(data):
     user_id = request.cookies.get('userId')
     room_id = data.get('roomId')
-    
+
     if not room_id or not user_id:
         emit("error", {"message": "Invalid request"}, to=request.sid)
         return
-    
+
     if room_id not in active_games:
         emit("error", {"message": "Game not found"}, to=request.sid)
         return
-    
+
     game_state = active_games[room_id]
-    
+
     if user_id not in game_state["users"]:
         emit("error", {"message": "User not in game"}, to=request.sid)
         return
-    
+
     # Send current game state to the requesting player
     emit("game_state", {
         "hp": game_state["player_hp"][user_id],
