@@ -36,7 +36,7 @@
                             class="meteor--info__input"
                             :class="{'container-error': errors.angle}"
                             v-model.number="meteor.angle"
-                            @input="validateInput('angle', 1)"
+                            @input="validateInput('angle', 0)"
                             @keydown="preventNegative"
                         >
                     </div>
