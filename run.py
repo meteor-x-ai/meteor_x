@@ -11,6 +11,7 @@ def run_backend():
     subprocess.run([sys.executable, "app.py"], cwd=str(BACKEND_DIR))
 
 def run_frontend():
+    subprocess.run(["npm", "install"], cwd=str(FRONTEND_DIR))
     subprocess.run(["npm", "run", "dev"], cwd=str(FRONTEND_DIR))
 
 if __name__ == "__main__":
