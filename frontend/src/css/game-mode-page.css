@@ -1,3 +1,4 @@
+
 .game--mode__button--container {
     position: fixed;
     left: 50%;
@@ -8,9 +9,9 @@
     padding: 15px;
     display: flex;
     gap: 15px;
+    z-index: 1;
     border-radius: var(--border-lg);
     flex-direction: column;
-
     background-color: var(--bg-color-container);
     border: 1px solid var(--white);
     backdrop-filter: blur(40px);
@@ -53,21 +54,20 @@
 
     transition: all var(--tr-duration);
     animation: show--scale__animation var(--tr-duration);
-}
 
-.game--mode__button:not(:disabled):hover {
-    gap: 15px;
-    box-shadow: 0 0 5px 2px rgba(var(--white-n), 0.5);
-}
+    &:not(:disabled):hover {
+        gap: 15px;
+        box-shadow: 0 0 5px 2px rgba(var(--white-n), 0.5);
+    }
 
-.game--mode__button:disabled {
-    opacity: .5;
-    cursor: not-allowed;
-}
+    &:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+    }
 
-.game--mode__button.return {
-    height: 30px;
-    font-size: var(--font-md);
+    &.return {
+        font-size: var(--font-md);
+    }
 }
 
 .game--mode__input {
@@ -86,15 +86,15 @@
 
     transition: all var(--tr-duration);
     animation: show--scale__animation var(--tr-duration);
-}
 
-.game--mode__input::placeholder {
-    color: rgba(var(--white-n), 0.5);
-}
+    &::placeholder {
+        color: rgba(var(--white-n), 0.5);
+    }
 
-.game--mode__input:focus {
-    border-color: var(--white);
-    outline: none;
+    &:focus {
+        border-color: var(--white);
+        outline: none;
+    }
 }
 
 .button__container {
@@ -103,7 +103,7 @@
     width: 100%;
 }
 
-.code--loading {
+.loading--animation {
     animation: blinking__animation 2s infinite;
 }
 
@@ -142,21 +142,22 @@
     user-select: none;
     transition: all var(--tr-duration);
     animation: show--scale__animation var(--tr-duration);
-}
 
-.login--info--container.unauthenticated {
-    cursor: pointer;
-    background-color: rgba(var(--red-n), .3);
-}
+    &.unauthenticated {
+        cursor: pointer;
+        background-color: rgba(var(--red-n), .3);
+        text-decoration: none;
 
-.login--info--container.unauthenticated a {
-    color: var(--white);
-    font-weight: normal;
-    text-decoration: none;
-}
+        a {
+            color: var(--white);
+            font-weight: normal;
+            text-decoration: none;
+        }
 
-.login--info--container.unauthenticated:hover {
-    transform: scale(1.1);
+        &:hover {
+            background-color: rgba(var(--red-n), .5);
+        }
+    }
 }
 
 @keyframes blinking__animation {

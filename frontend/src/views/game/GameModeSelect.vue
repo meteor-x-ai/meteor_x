@@ -1,20 +1,41 @@
 <template>
+    <teleport to="body" v-if="!pendingAuth">
+        <div
+            v-if="currentUser?.username"
+            class="login--info--container"
+        >
+            {{currentUser.username}}
+        </div>
+        <router-link
+            v-else
+            class="login--info--container unauthenticated"
+            :to="{
+                        name: 'login-page',
+                        query: {
+                            redirect: 'game'
+                        }
+                    }"
+        >
+            unauthenticated
+        </router-link>
+    </teleport>
+
     <div class="game--mode__page">
         <div class="game--mode__button--container">
             <span class="game--mode__title">Save Planet</span>
-            <template v-if="currentMode === 'select'">
+            <template v-if="currentMode === eModes.SELECT">
                 <div class="button__container">
                     <router-link :to="{name: 'game-solo-mode'}" class="game--mode__button">Solo</router-link>
                     <button
                         class="game--mode__button"
-                        @click="currentMode = 'coop'"
+                        @click="currentMode = eModes.COOP"
                         :disabled="!currentUser"
                     >
                         Coop
                     </button>
                 </div>
             </template>
-            <template v-else-if="currentMode === 'coop'">
+            <template v-else-if="currentMode === eModes.COOP">
                 <input
                     type="text"
                     maxlength="4"
@@ -24,14 +45,30 @@
                     @input="roomCodeInput = roomCodeInput.replace(/\D/g, '')"
                 >
                 <div class="button__container">
-                    <button class="game--mode__button" @click="currentMode = 'select'">Return</button>
-                    <button class="game--mode__button" @click="joinRoom" :disabled="roomCodeInput.length !== 4">Join</button>
-                    <button class="game--mode__button" @click="currentMode = 'create'">Create</button>
+                    <button
+                        class="game--mode__button"
+                        @click="currentMode = eModes.SELECT"
+                    >
+                        Return
+                    </button>
+                    <button
+                        class="game--mode__button"
+                        @click="joinRoom"
+                        :disabled="roomCodeInput.length !== 4"
+                    >
+                        Join
+                    </button>
+                    <button
+                        class="game--mode__button"
+                        @click="currentMode = eModes.CREATE"
+                    >
+                        Create
+                    </button>
                 </div>
             </template>
-            <template v-else-if="currentMode === 'create'">
+            <template v-else-if="currentMode === eModes.CREATE">
                 <div v-if="roomInfo.code">Code: {{roomInfo.code}}</div>
-                <span v-else>Code: <span class="code--loading">loading...</span></span>
+                <span v-else>Code: <span class="loading--animation">loading...</span></span>
                 <span v-if="roomInfo.code">Users ↓</span>
                 <div
                     class="user--container"
@@ -39,10 +76,20 @@
                     @click="removeUser(user.id)"
                     v-for="(user, i) in users"
                 >
-                    {{i+1}}.{{user.username}}
+                    {{cards[i]}}: {{i+1}}.{{user.username}} <span
+                    v-if="removingUserId === user.id"
+                    class="loading--animation"
+                >
+                    removing...
+                </span>
                 </div>
                 <div class="button__container">
-                    <button class="game--mode__button" @click="handleReturn">Cancel</button>
+                    <button
+                        class="game--mode__button"
+                        @click="closeRoom"
+                    >
+                        Cancel
+                    </button>
                     <button
                         class="game--mode__button"
                         v-if="roomInfo.id"
@@ -53,7 +100,7 @@
                     </button>
                 </div>
             </template>
-            <template v-else-if="currentMode === 'room'">
+            <template v-else-if="currentMode === eModes.ROOM">
                 <span>Code: {{roomInfo.code}}</span>
                 <span>Users ↓</span>
                 <div
@@ -61,30 +108,10 @@
                     :class="{'current': user.id === currentUser?.id}"
                     v-for="(user, i) in users"
                 >
-                    {{i+1}}.{{user.username}}
+                    {{cards[i]}}: {{i+1}}.{{user.username}}
                 </div>
             </template>
         </div>
-        <teleport to="body">
-            <div
-                class="login--info--container"
-                v-if="!pendingAuth"
-                :class="{'unauthenticated': !currentUser}"
-            >
-                <div v-if="currentUser?.username">{{currentUser.username}}</div>
-                <router-link
-                    v-else
-                    :to="{
-                        name: 'login-page',
-                        query: {
-                            redirect: 'game'
-                        }
-                    }"
-                >
-                    unauthenticated
-                </router-link>
-            </div>
-        </teleport>
     </div>
 </template>
 
@@ -92,43 +119,37 @@
 import "@/css/game-mode-page.css"
 import {onBeforeMount, onUnmounted, reactive, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
-import {io, Socket} from "socket.io-client";
-import {BACK_PATH_WS} from "@/repository/backendPath.ts";
-import {eGameRoomChangedTypes} from "@/enums/gameEnums.ts";
+import {eGameCardNames, eGameRoomChangedTypes, eModes, eSocketEvent} from "@/enums/gameEnums.ts";
 import authRepo from "@/repository/authRepo.ts";
 import type {iUser} from "@/models/user-models.ts";
+import {useSocketStore} from "@/services/wsService.ts";
+import type {Socket} from "socket.io-client";
 
 const route = useRoute();
 const router = useRouter();
+const socketStore = useSocketStore()
 
-type modes = 'select' | 'coop' | 'create' | 'room'
+const cards = Object.values(eGameCardNames)
 
-const currentMode = ref<modes>('select')
-const currentUser = ref<iUser | null>(null);
-
-const socket = ref<Socket | null>(null);
 const users = ref<iUser[]>([])
-
-const roomInfo = reactive<{
-    code: string,
-    id: string,
-}>({
-    code: "",
-    id: ""
-})
-const roomCodeInput = ref<string>("")
-
+const socket = ref<Socket | null>(null)
 const pendingAuth = ref<boolean>(true);
+const currentMode = ref<eModes>(eModes.SELECT);
+const currentUser = ref<iUser | null>(null);
+const roomCodeInput = ref<string>("");
+const removingUserId = ref<string>("");
+
+const roomInfo = reactive<{ code: string, id: string }>({code: "", id: ""})
 
 const changeQueryMode = async () => {
     const newQuery = { ...route.query };
 
-    if (currentMode.value === 'select') {
+    if (currentMode.value === eModes.SELECT) {
         delete newQuery.mode;
     } else {
         newQuery.mode = currentMode.value;
     }
-    if (currentMode.value !== 'room' && currentMode.value !== 'create') {
+    if (currentMode.value !== eModes.ROOM && currentMode.value !== eModes.CREATE) {
         delete newQuery.code;
     }
 
@@ -139,19 +160,12 @@ const changeQueryMode = async () => {
 }
 
 const initializeSocket = () => {
-    if (socket.value) {
-        return socket.value;
-    }
+    if (!socketStore.socket?.connected) socketStore.connect()
+    socket.value = socketStore.socket
 
-    const newSocket = io(BACK_PATH_WS, {
-        withCredentials: true,
-        transports: ["websocket"],
-        reconnection: true,
-        reconnectionAttempts: 3,
-        reconnectionDelay: 1000
-    });
+    if (socket.value === null) return
 
-    newSocket.on("room_changed", (data) => {
+    socket.value.on(eSocketEvent.ROOM_CHANGED, (data) => {
         switch (data.type) {
             case eGameRoomChangedTypes.USER_ADDED:
                 if (data.userId === currentUser.value?.id) return;
@@ -160,20 +174,22 @@ const initializeSocket = () => {
                     username: data.username
                 });
                 break;
+            case eGameRoomChangedTypes.USER_REMOVED:
+                if (data.userId === currentUser.value?.id) {
+                    socketStore.disconnect()
+                    currentMode.value = eModes.COOP;
+                    users.value = []
+                    break;
+                }
+                if (removingUserId.value) removingUserId.value = '';
+                users.value = users.value.filter(u => u.id !== data.userId);
+                break;
             default:
-                console.warn("Room changed unsupported:", data)
+                console.warn("Room changed unsupported type:", data)
         }
     });
 
-    newSocket.on("connect_error", (err) => {
-        console.error("Socket connection error:", err);
-    });
-
-    newSocket.on("error", (err) => {
-        console.error("Socket error:", err);
-    });
-
-    newSocket.on("game_redirect", async (data) => {
+    socket.value.on(eSocketEvent.GAME_REDIRECT, async (data) => {
         if (data) {
             await router.push({
                 name: 'game-coop-mode',
@@ -184,40 +200,27 @@ const initializeSocket = () => {
         }
     })
 
-
-    socket.value = newSocket;
-    return newSocket;
-};
-
-const cleanupSocket = () => {
-    if (socket.value) {
-        socket.value.removeAllListeners();
-        socket.value.disconnect();
-        socket.value = null;
-        users.value = [];
-        roomInfo.code = "";
-        roomInfo.id = "";
-    }
-};
-
-const handleReturn = () => {
-    cleanupSocket();
-    currentMode.value = 'coop';
+    socket.value.on(eSocketEvent.ROOM_CLOSED, () =>{
+        socketStore.socket?.disconnect();
+        roomInfo.id = ""
+        currentMode.value = eModes.COOP;
+    })
 };
 
 const codeManipulations = async () => {
-    if (currentMode.value === "create" && !socket.value) {
+    if (currentMode.value === eModes.CREATE && !socketStore.socket) {
         if (false) {
             //TODO connect by code from query
         } else {
             try {
-                const newSocket = initializeSocket();
+                initializeSocket()
+                if (socket.value === null) return
 
-                newSocket.on("connect", () => {
-                    newSocket.emit("join_room");
+                socket.value.on(eSocketEvent.CONNECT, () => {
+                    socket.value!.emit(eSocketEvent.JOIN_ROOM);
                 });
 
-                newSocket.on("room_created", async (data) => {
+                socket.value.on(eSocketEvent.ROOM_CREATED, async (data) => {
                     roomInfo.id = data.roomId;
                     roomInfo.code = data.code;
                     users.value = [{
@@ -237,26 +240,28 @@ const codeManipulations = async () => {
                 console.error("Error creating room:", error);
             }
         }
-    } else if (currentMode.value === 'room') {
-
-    } else {
+    } else if (currentMode.value === eModes.ROOM) {
+        return
+    }
+    else {
         roomInfo.code = ""
     }
 }
 
 const joinRoom = async () => {
     try {
-        const newSocket = initializeSocket();
+        initializeSocket()
+        if (socket.value === null) return
 
-        newSocket.on("connect", () => {
-            newSocket.emit("join_existing_room", { code: roomCodeInput.value });
+        socket.value.on(eSocketEvent.CONNECT, () => {
+            socket.value!.emit(eSocketEvent.JOIN_EXISTING_ROOM, { code: roomCodeInput.value });
         });
 
-        newSocket.on("room_joined", (data) => {
+        socket.value.on(eSocketEvent.ROOM_JOINED, (data) => {
             users.value = data.users;
             roomInfo.id = data.roomId;
             roomInfo.code = data.code;
-            currentMode.value = 'room';
+            currentMode.value = eModes.ROOM;
         });
 
     } catch (error) {
@@ -264,16 +269,19 @@ const joinRoom = async () => {
     }
 }
 
-const removeUser = (id: string) => {
-    console.log(id)
+const removeUser = (targetUserId: string) => {
+    if (socket.value?.connected && targetUserId !== currentUser.value?.id) {
+        removingUserId.value = targetUserId;
+        socket.value.emit(eSocketEvent.REMOVE_USER, {
+            targetUserId,
+            roomId: roomInfo.id,
+        });
+    }
 }
 
 const startGame = async () => {
-    if (!socket.value?.connected) return
-    console.log("Start game")
-    socket.value.emit("start_game", {
-        roomId: roomInfo.id,
-    });
+    if (!socket.value?.connected) return;
+    socket.value.emit(eSocketEvent.START_GAME, { roomId: roomInfo.id });
 }
 
 watch(currentMode, async () => {
@@ -284,8 +292,8 @@ watch(currentMode, async () => {
 onBeforeMount(async () => {
     currentUser.value = await authRepo.auth();
 
-    if (currentUser.value && (route.query.mode === 'coop' || route.query.mode === 'create')) {
-        currentMode.value = route.query.mode as modes;
+    if (currentUser.value && (route.query.mode === eModes.COOP || route.query.mode === eModes.CREATE)) {
+        currentMode.value = route.query.mode as eModes;
     }
 
     await changeQueryMode();
@@ -295,6 +303,6 @@ onBeforeMount(async () => {
 })
 
 onUnmounted(() => {
-    cleanupSocket();
+    socket.value = null
 });
 </script>
