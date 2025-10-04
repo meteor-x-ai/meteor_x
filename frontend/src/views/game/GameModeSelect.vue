@@ -19,13 +19,18 @@
                 >
                 <div class="button__container">
                     <button class="game--mode__button" @click="currentMode = 'select'">Return</button>
-                    <button class="game--mode__button" :disabled="roomCodeInput.length !== 4">Join</button>
+                    <button class="game--mode__button" @click="joinRoom" :disabled="roomCodeInput.length !== 4">Join</button>
                     <button class="game--mode__button" @click="currentMode = 'create'">Create</button>
                 </div>
             </template>
             <template v-else-if="currentMode === 'create'">
                 <div v-if="createdCoopCode">Code: {{createdCoopCode}}</div>
                 <span v-else>Code: <span class="code--loading">loading...</span></span>
+                <div>
+                    <div v-for="user in users">
+                        {{user}}
+                    </div>
+                </div>
                 <div class="button__container">
                     <button class="game--mode__button" @click="currentMode = 'coop'">Return</button>
                 </div>
@@ -38,9 +43,14 @@
 import "@/css/game-mode-page.css"
 import {onMounted, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
-import gameRepo from "@/repository/gameRepo.ts";
-import {io} from "socket.io-client";
+import {io, Socket} from "socket.io-client";
 import {BACK_PATH_WS} from "@/repository/backendPath.ts";
+import {eGameRoomChangedTypes} from "@/enums/gameEnums.ts";
+
+interface iUser {
+    id: string;
+    username: string;
+}
 
 const route = useRoute();
 const router = useRouter();
@@ -53,7 +63,11 @@ const currentMode = ref<modes>(
         : 'select'
 )
 
+const socket = ref<Socket | null>(null);
+const users = ref<iUser[]>([])
+
 const createdCoopCode = ref<string>("")
+const createdCoopId = ref<string>("")
 const roomCodeInput = ref<string>("")
 
 const changeQueryMode = (mode: modes) => {
@@ -71,55 +85,97 @@ const changeQueryMode = (mode: modes) => {
     })
 }
 
+const initializeSocket = () => {
+    if (socket.value?.connected) {
+        return socket.value;
+    }
+
+    const newSocket = io(BACK_PATH_WS, {
+        withCredentials: true,
+        transports: ["websocket"],
+        reconnection: true,
+        reconnectionAttempts: 3,
+        reconnectionDelay: 1000
+    });
+
+    newSocket.on("room_changed", (data) => {
+        switch (data.type) {
+            case eGameRoomChangedTypes.USER_ADDED:
+                users.value.push({
+                    id: data.userId,
+                    username: data.username
+                });
+                break;
+            default:
+                console.warn("Room changed unsupported:", data)
+        }
+    });
+
+    newSocket.on("connect_error", (err) => {
+        console.error("Socket connection error:", err);
+    });
+
+    newSocket.on("error", (err) => {
+        console.error("Socket error:", err);
+    });
+
+    socket.value = newSocket;
+    return newSocket;
+};
+
+// const handleReturn = () => {
+//     cleanupSocket();
+//     currentMode.value = 'coop';
+// };
+
 const codeManipulations = async (mode: modes) => {
     if (mode === "create") {
         console.log("Creating room...");
-        
+
         try {
-            console.log("Performing test login...");
-            await gameRepo.testLogin();
-            
-            const data = await gameRepo.getCode();
-            console.log("Room created:", data);
-            
-            if (data.error) {
-                console.error("Room creation error:", data.error);
-                return;
-            }
-            
-            createdCoopCode.value = data.code;
-            
-            const socket = io(BACK_PATH_WS, {
-                withCredentials: true,
-                transports: ["websocket"],
+            const newSocket = initializeSocket();
+
+            newSocket.on("connect", () => {
+                newSocket.emit("join_room");
             });
 
-            socket.on("connect", () => {
-                console.log("Connected to socket, id:", socket.id);
-                socket.emit("join_lobby", { roomId: data.roomId });
+            newSocket.on("room_created", (data) => {
+                createdCoopId.value = data.roomId;
+                createdCoopCode.value = data.code;
             });
 
-            socket.on("socket_connected", (data) => {
-                console.log("Socket connected event:", data);
-            });
-
-            socket.on("lobby_update", (data) => {
+            newSocket.on("lobby_update", (data) => {
                 console.log("Lobby update:", data);
             });
 
-            socket.on("error", (error) => {
-                console.error("Socket error:", error);
-            });
-
-            socket.on("disconnect", () => {
-                console.log("Disconnected from socket");
-            });
-            
         } catch (error) {
             console.error("Error creating room:", error);
         }
     } else {
         createdCoopCode.value = ""
+    }
+}
+
+const joinRoom = async () => {
+    try {
+        console.log(roomCodeInput.value)
+
+        const newSocket = initializeSocket();
+
+        newSocket.on("connect", () => {
+            newSocket.emit("join_existing_room", { code: roomCodeInput.value });
+        });
+
+        newSocket.on("room_joined", (data) => {
+            console.log("Room joined:", data);
+        });
+
+        newSocket.on("room_changed", (data) => {
+            console.log("room_changed:", data);
+        });
+
+    } catch (error) {
+        console.error("Error joining room:", error);
     }
 }
 
@@ -133,7 +189,7 @@ onMounted(async () => {
     codeManipulations(currentMode.value);
 })
 
-
-onMounted(async () => {
-})
+// onUnmounted(() => {
+//     cleanupSocket();
+// });
 </script>

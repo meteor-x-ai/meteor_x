@@ -23,6 +23,7 @@ const authRepo = {
 
     async signup(username: string, password: string): Promise<string | null> {
         try {
+            console.log(username, password);
             const res = await fetch(`${BACK_PATH_API}/signup`, {
                 method: "POST",
                 body: JSON.stringify({ username, password }),
