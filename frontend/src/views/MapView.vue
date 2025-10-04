@@ -3,49 +3,53 @@
         <teleport to="body">
             <div v-if="!watchMode" class="meteor--container">
                 <div class="meteor--info__container">
-                    <div class="meteor--info__input--container" :class="{'container-error': errors.mass}">
-                        <label class="meteor--info__input--label">Mass <span class="meteor--info__input--label--text">10-1000000000</span>kg</label>
+                    <div class="meteor--info__input--container" >
+                        <label class="meteor--info__input--label" >Mass <span class="meteor--info__input--label--text">10-1000000000</span>kg</label>
                         <input
                             placeholder="Input mass"
                             type="number"
                             class="meteor--info__input"
+                            :class="{'container-error': errors.mass}"
                             v-model.number="meteor.mass"
                             @input="validateInput('mass', 10, 1000000000)"
                             @keydown="preventNegative"
                         >
                         <div v-if="errors.mass" class="error">{{ errors.mass }}</div>
                     </div>
-                    <div class="meteor--info__input--container" :class="{'container-error': errors.speed}">
+                    <div class="meteor--info__input--container">
                         <label class="meteor--info__input--label">Speed <span class="meteor--info__input--label--text">5-70</span>km/s</label>
                         <input
                             placeholder="Input speed"
                             type="number"
                             class="meteor--info__input"
+                            :class="{'container-error': errors.speed}"
                             v-model.number="meteor.speed"
                             @input="validateInput('speed', 5)"
                             @keydown="preventNegative"
                         >
                         <div v-if="errors.speed" class="error">{{ errors.speed }}</div>
                     </div>
-                    <div class="meteor--info__input--container" :class="{'container-error': errors.angle}">
+                    <div class="meteor--info__input--container">
                         <label class="meteor--info__input--label">Angle  <span class="meteor--info__input--label--text">1-180</span></label>
                         <!--TODO нужно что бы диапазон был 1-180-->
                         <input
                             placeholder="Input angle"
                             type="number"
                             class="meteor--info__input"
+                            :class="{'container-error': errors.angle}"
                             v-model.number="meteor.angle"
                             @input="validateInput('angle', 1)"
                             @keydown="preventNegative"
                         >
                         <div v-if="errors.angle" class="error">{{ errors.angle }}</div>
                     </div>
-                    <div class="meteor--info__input--container" :class="{'container-error': errors.year}">
+                    <div class="meteor--info__input--container">
                         <label class="meteor--info__input--label">Year</label>
                         <input
                             placeholder="Input year"
                             type="number"
                             class="meteor--info__input"
+                            :class="{'container-error': errors.year}"
                             v-model.number="meteor.year"
                             @input="validateInput('year', 0, 2026)"
                             @keydown="preventNegative"
