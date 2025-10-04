@@ -1,24 +1,14 @@
-import {backPath} from "@/repository/backendPath.ts";
-import { io } from "socket.io-client"
+import {BACK_PATH_API} from "@/repository/backendPath.ts";
 
 const gameRepo = {
     async getCode() {
         try {
-            const socket = io(`${backPath}`, {
-                withCredentials: true,
-                transports: ["websocket", "polling"]
-            });
-
-            const res = await fetch(`${backPath}/coop/create`, {
+            const res = await fetch(`${BACK_PATH_API}/coop/create`, {
                 method: "POST",
                 credentials: "include"
             })
 
-            const data = await res.json()
-
-            socket.emit("join_lobby", { roomId: data.roomId })
-
-            return {code: data.code, socket: socket}
+            return await res.json()
         } catch (error) {
             console.error(error);
         }

@@ -1,9 +1,9 @@
-import {backPath} from "@/repository/backendPath.ts";
+import {BACK_PATH_API} from "@/repository/backendPath.ts";
 
 const authRepo = {
     async login(username: string, password: string): Promise<string | null> {
         try {
-            const res = await fetch(`${backPath}/login`, {
+            const res = await fetch(`${BACK_PATH_API}/login`, {
                 method: "POST",
                 body: JSON.stringify({ username, password }),
                 headers: { "Content-Type": "application/json" },
@@ -23,7 +23,7 @@ const authRepo = {
 
     async signup(username: string, password: string): Promise<string | null> {
         try {
-            const res = await fetch(`${backPath}/signup`, {
+            const res = await fetch(`${BACK_PATH_API}/signup`, {
                 method: "POST",
                 body: JSON.stringify({ username, password }),
                 headers: { "Content-Type": "application/json" },
@@ -43,7 +43,7 @@ const authRepo = {
 
     async auth(): Promise<string | null> {
         try {
-            const res = await fetch(`${backPath}/auth`, {
+            const res = await fetch(`${BACK_PATH_API}/auth`, {
                 method: "GET",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },

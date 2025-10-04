@@ -36,9 +36,10 @@
 
 <script setup lang="ts">
 import "@/css/game-mode-page.css"
-import {ref, watch} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
-import gameRepo from "@/repository/gameRepo.ts";
+import {io} from "socket.io-client";
+import {BACK_PATH_WS} from "@/repository/backendPath.ts";
 
 const route = useRoute();
 const router = useRouter();
@@ -71,7 +72,22 @@ const changeQueryMode = (mode: modes) => {
 
 const codeManipulations = async (mode: modes) => {
     if (mode === "create") {
-        await gameRepo.getCode()
+        // const data = await gameRepo.getCode()
+        const socket = io(BACK_PATH_WS, {
+            withCredentials: true,
+            transports: ["websocket"],
+        });
+        console.log(socket)
+
+        socket.on("connect", () => {
+            console.log("Connected, id:", socket.id);
+
+            socket.emit("join_lobby", {});
+        })
+
+        socket.on("lobby_created", (data) => {
+            console.log(data)
+        })
     } else {
         createdCoopCode.value = ""
     }
@@ -80,5 +96,10 @@ const codeManipulations = async (mode: modes) => {
 watch(currentMode, (newMode) => {
     changeQueryMode(newMode);
     codeManipulations(newMode);
+})
+
+onMounted(async () => {
+    changeQueryMode(currentMode.value);
+    codeManipulations(currentMode.value);
 })
 </script>
