@@ -1,0 +1,190 @@
+
+.meteor--presets__container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 250px;
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 15px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    color: #333;
+    z-index: 2000;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.meteor--presets__container label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+    font-size: 12px;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.meteor--presets__container input,
+.meteor--presets__container select {
+    width: 100%;
+    padding: 6px 8px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    color: #333;
+    outline: none;
+    backdrop-filter: blur(5px);
+}
+
+.meteor--presets__container input:focus,
+.meteor--presets__container select:focus {
+    border-color: rgba(0, 0, 0, 0.4);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.meteor--presets__container button {
+    width: 205px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.6);
+    color: #333;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
+}
+
+.meteor--presets__container button:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateY(-1px);
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+    width: 100px;
+}
+
+.dropdown-btn {
+    width: 100%;
+    padding: 6px 8px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(5px);
+    transition: all 0.2s ease;
+}
+
+.dropdown-btn:hover {
+    border-color: rgba(0, 0, 0, 0.4);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.arrow {
+    margin-left: 10px;
+    transition: transform 0.2s;
+}
+
+.arrow.open {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 0;
+    right: 100%;
+    z-index: 9999;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 5px 0;
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    white-space: nowrap;
+    backdrop-filter: blur(10px);
+    animation: dropdownFade 0.2s ease;
+}
+
+.dropdown.open-up .dropdown-menu {
+    top: auto;
+    bottom: 100%;
+    transform-origin: bottom left;
+}
+
+@keyframes dropdownFade {
+    from {
+        opacity: 0;
+        transform: scaleY(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+}
+
+.preset-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.preset-item:last-child {
+    border-bottom: none;
+}
+
+.preset-item:hover {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.preset-name {
+    font-weight: 600;
+    margin-bottom: 2px;
+    color: #333;
+}
+
+.preset-casualties {
+    font-size: 12px;
+    color: #666;
+}
+
+.casualties--display {
+    background: rgba(255, 243, 205, 0.9);
+    border: 1px solid rgba(255, 234, 167, 0.8);
+    border-radius: 8px;
+    text-align: center;
+    backdrop-filter: blur(5px);
+    gap: 5px;
+    padding: 10px;
+}
+
+.casualties--number {
+    font-weight: 600;
+    color: #856404;
+    font-size: 14px;
+}
+
+.random-meteor-btn {
+    margin-top: 10px;
+}
+
+.meteor--info__link:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
