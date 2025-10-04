@@ -11,7 +11,7 @@
                             class="meteor--info__input"
                             :class="{'container-error': errors.mass}"
                             v-model.number="meteor.mass"
-                            @input="validateInput('mass', 10, 1000000000)"
+                            @input="validateInput('mass', 0,)"
                             @keydown="preventNegative"
                         >
                         <div v-if="errors.mass" class="error">{{ errors.mass }}</div>
@@ -24,7 +24,7 @@
                             class="meteor--info__input"
                             :class="{'container-error': errors.speed}"
                             v-model.number="meteor.speed"
-                            @input="validateInput('speed', 5)"
+                            @input="validateInput('speed', 0)"
                             @keydown="preventNegative"
                         >
                     </div>
@@ -173,8 +173,8 @@ const errors = reactive<Record<'mass'|'speed'|'angle'|'year', string>>({
 });
 const showMap = computed(() => currentZoom.value >= 8)
 const canMeteor = computed(() =>
-    meteor.mass !== null && Number(meteor.mass) > 0 &&
-    meteor.speed !== null && Number(meteor.speed) > 0 &&
+    meteor.mass !== null && Number(meteor.mass) >= 0 &&
+    meteor.speed !== null && Number(meteor.speed) >= 0 &&
     meteor.angle !== null && Number(meteor.angle) >= 0 &&
     meteor.type !== null &&
     meteor.material !== null &&
