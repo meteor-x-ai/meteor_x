@@ -38,6 +38,7 @@
 import "@/css/game-mode-page.css"
 import {onMounted, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
+import gameRepo from "@/repository/gameRepo.ts";
 import {io} from "socket.io-client";
 import {BACK_PATH_WS} from "@/repository/backendPath.ts";
 
@@ -72,22 +73,51 @@ const changeQueryMode = (mode: modes) => {
 
 const codeManipulations = async (mode: modes) => {
     if (mode === "create") {
-        // const data = await gameRepo.getCode()
-        const socket = io(BACK_PATH_WS, {
-            withCredentials: true,
-            transports: ["websocket"],
-        });
-        console.log(socket)
+        console.log("Creating room...");
+        
+        try {
+            console.log("Performing test login...");
+            await gameRepo.testLogin();
+            
+            const data = await gameRepo.getCode();
+            console.log("Room created:", data);
+            
+            if (data.error) {
+                console.error("Room creation error:", data.error);
+                return;
+            }
+            
+            createdCoopCode.value = data.code;
+            
+            const socket = io(BACK_PATH_WS, {
+                withCredentials: true,
+                transports: ["websocket"],
+            });
 
-        socket.on("connect", () => {
-            console.log("Connected, id:", socket.id);
+            socket.on("connect", () => {
+                console.log("Connected to socket, id:", socket.id);
+                socket.emit("join_lobby", { roomId: data.roomId });
+            });
 
-            socket.emit("join_lobby", {});
-        })
+            socket.on("socket_connected", (data) => {
+                console.log("Socket connected event:", data);
+            });
 
-        socket.on("lobby_created", (data) => {
-            console.log(data)
-        })
+            socket.on("lobby_update", (data) => {
+                console.log("Lobby update:", data);
+            });
+
+            socket.on("error", (error) => {
+                console.error("Socket error:", error);
+            });
+
+            socket.on("disconnect", () => {
+                console.log("Disconnected from socket");
+            });
+            
+        } catch (error) {
+            console.error("Error creating room:", error);
+        }
     } else {
         createdCoopCode.value = ""
     }
@@ -101,5 +131,9 @@ watch(currentMode, (newMode) => {
 onMounted(async () => {
     changeQueryMode(currentMode.value);
     codeManipulations(currentMode.value);
+})
+
+
+onMounted(async () => {
 })
 </script>
