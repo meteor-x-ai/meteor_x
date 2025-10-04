@@ -1,23 +1,9 @@
+import { eMeteorType, eMeteorMaterial, eWeatherType } from "@/enums/meteor-enums";
+import type { iMeteorPreset } from "@/models/meteor-models";
+
 export type Material = "STONE" | "IRON" | "MIXED";
 export type TypeKind = "STONY" | "IRON" | "STONY_IRON";
 export type Weather = "CLEAR" | "RAIN" | "SNOW";
-
-export interface MeteorPreset {
-    name: string;
-    year: number;
-    mass: number;
-    speed: number;
-    angle: number;
-    latitude: number;
-    longitude: number;
-    location: string;
-    type: TypeKind;
-    material: Material;
-    weather: Weather;
-    diameter: number;
-    craterDiameter: number;
-    description: string;
-}
 
 const DENSITY = { STONE: 3500, IRON: 7800, MIXED: 4900 } as const;
 
@@ -63,13 +49,13 @@ function randomWeather(location: string): Weather {
 }
 
 function randomSpeed() {
-    const mean = 20000, sigma = 4500;
+    const mean = 20, sigma = 4.5;
     const gaussian = () => {
         const u = 1 - Math.random(), v = 1 - Math.random();
         return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
     };
     const v = mean + sigma * gaussian();
-    return Math.min(Math.max(v, 12000), 30000);
+    return Math.min(Math.max(v, 12), 30);
 }
 
 const randomAngle = () => Math.round(rnd(12, 68));
@@ -91,7 +77,8 @@ function massFrom(diameterM: number, density: number) {
     return volume * density;
 }
 
-function estimateCraterDiameter(massKg: number, speedMS: number, angleDeg: number, material: Material) {
+function estimateCraterDiameter(massKg: number, speedKmS: number, angleDeg: number, material: Material) {
+    const speedMS = speedKmS * 1000;
     const energyJ = 0.5 * massKg * speedMS * speedMS;
     const energyMt = energyJ / 4.184e15;
 
@@ -105,10 +92,37 @@ function estimateCraterDiameter(massKg: number, speedMS: number, angleDeg: numbe
     return Math.max(0, Math.min(meters, 500_000));
 }
 
-export function generateRandomMeteor(): MeteorPreset {
+function convertType(internalType: TypeKind): eMeteorType {
+    switch (internalType) {
+        case "STONY": return eMeteorType.STONY;
+        case "IRON": return eMeteorType.IRON;
+        case "STONY_IRON": return eMeteorType.STONY_IRON;
+        default: return eMeteorType.STONY;
+    }
+}
+
+function convertMaterial(internalMaterial: Material): eMeteorMaterial {
+    switch (internalMaterial) {
+        case "STONE": return eMeteorMaterial.STONE;
+        case "IRON": return eMeteorMaterial.IRON;
+        case "MIXED": return eMeteorMaterial.MIXED;
+        default: return eMeteorMaterial.STONE;
+    }
+}
+
+function convertWeather(internalWeather: Weather): eWeatherType {
+    switch (internalWeather) {
+        case "CLEAR": return eWeatherType.CLEAR;
+        case "RAIN": return eWeatherType.RAIN;
+        case "SNOW": return eWeatherType.SNOW;
+        default: return eWeatherType.CLEAR;
+    }
+}
+
+export function generateRandomMeteor(): iMeteorPreset {
     const { material, type } = pickMaterial();
     const { latitude, longitude, location } = randomGeo();
-    const speed = Math.round(randomSpeed());
+    const speed = Math.round(randomSpeed() * 100) / 100;
     const angle = randomAngle();
     const diameter = randomDiameter();
     const mass = massFrom(diameter, DENSITY[material]);
@@ -130,9 +144,9 @@ export function generateRandomMeteor(): MeteorPreset {
         latitude: Math.round(latitude * 1000) / 1000,
         longitude: Math.round(longitude * 1000) / 1000,
         location,
-        type,
-        material,
-        weather,
+        type: convertType(type),
+        material: convertMaterial(material),
+        weather: convertWeather(weather),
         diameter: Math.round(diameter * 100) / 100,
         craterDiameter,
         description,

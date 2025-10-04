@@ -25,3 +25,11 @@ export interface iCalculatedData {
     weatherCoefficient: number;
     radiusOverTime: iRadiusOverTime[];
 }
+
+export interface iMeteorPreset extends iUserInput {
+    name: string;
+    location: string;
+    diameter: number;
+    craterDiameter: number;
+    description: string;
+}

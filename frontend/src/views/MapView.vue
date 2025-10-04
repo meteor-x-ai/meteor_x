@@ -173,36 +173,11 @@ import L from "leaflet"
 import {computed, nextTick, onMounted, reactive, ref, watch} from "vue";
 import "@/css/map-page.css";
 import {eMeteorMaterial, eMeteorType, eWeatherType} from "@/enums/meteor-enums.ts";
-import type {iCalculatedData, iUserInput} from "@/models/meteor-models.ts";
+import type {iCalculatedData, iUserInput, iMeteorPreset} from "@/models/meteor-models.ts";
 import {computeCalculated, getZoomForRadius} from "@/services/meteorMathService.ts";
 import { meteorPresets } from "@/data/presets";
 import { generateRandomMeteor } from "@/data/random_meteor";
-import type { MeteorPreset } from "@/data/random_meteor";
-
-class CasualtyCalculator {
-  private meteor: MeteorPreset;
-
-  constructor(meteor: MeteorPreset) {
-    this.meteor = meteor;
-  }
-
-  public estimateCasualties(): number {
-    const { mass, speed, angle, location } = this.meteor;
-
-    const energy = 0.5 * mass * speed * speed;
-    const angleFactor = Math.sin((angle * Math.PI) / 180);
-    let casualties = (energy / 1e9) * angleFactor;
-
-    if (location === "Open Ocean" || location === "Antarctica") {
-      casualties *= 0.01;
-    } else if (["Asia", "Europe", "Africa"].includes(location)) {
-      casualties *= 1.3;
-    }
-
-    casualties = Math.max(0, Math.min(casualties, 8_000_000_000));
-    return Math.round(casualties);
-  }
-}
+import { CasualtyCalculator } from "@/services/casualtyCalculator";
 
 const SETTINGS_ZOOM_ANIMATION_DURATION: number = 1.5
 const SETTINGS_DEFAULT_ZOOM_COUNT: number = 5
@@ -243,48 +218,25 @@ const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value;
 }
 
-const calculateCasualties = (preset: MeteorPreset): number => {
+const calculateCasualties = (preset: iMeteorPreset): number => {
   const calculator = new CasualtyCalculator(preset);
   return calculator.estimateCasualties();
 }
 
-const selectPreset = (preset: MeteorPreset) => {
+const selectPreset = (preset: iMeteorPreset) => {
   selectedPresetName.value = preset.name;
   isDropdownOpen.value = false;
 
-  meteor.mass = Number(preset.mass) || 0;
-  meteor.speed = Number(preset.speed) || 0;
-  meteor.angle = Number(preset.angle) || 0;
-  meteor.year = Number(preset.year) || 2025;
-
-  switch(preset.type) {
-    case "STONY": meteor.type = eMeteorType.STONY; break;
-    case "IRON": meteor.type = eMeteorType.IRON; break;
-    case "STONY_IRON": meteor.type = eMeteorType.STONY_IRON; break;
-    default: meteor.type = eMeteorType.STONY;
-  }
-
-  switch(preset.material) {
-    case "STONE": meteor.material = eMeteorMaterial.STONE; break;
-    case "IRON": meteor.material = eMeteorMaterial.IRON; break;
-    case "MIXED": meteor.material = eMeteorMaterial.MIXED; break;
-    default: meteor.material = eMeteorMaterial.STONE;
-  }
-
-  switch(preset.weather) {
-    case "CLEAR": meteor.weather = eWeatherType.CLEAR; break;
-    case "RAIN": meteor.weather = eWeatherType.RAIN; break;
-    case "SNOW": meteor.weather = eWeatherType.SNOW; break;
-    default: meteor.weather = eWeatherType.CLEAR;
-  }
-
-  meteor.latitude = Number(preset.latitude) || 0;
-  meteor.longitude = Number(preset.longitude) || 0;
-
-  console.log('Updated meteor values:', {
-    type: meteor.type,
-    material: meteor.material,
-    weather: meteor.weather
+  Object.assign(meteor, {
+    mass: preset.mass,
+    speed: preset.speed,
+    angle: preset.angle,
+    year: preset.year,
+    type: preset.type,
+    material: preset.material,
+    weather: preset.weather,
+    latitude: preset.latitude,
+    longitude: preset.longitude
   });
 
   estimatedCasualties.value = calculateCasualties(preset);
@@ -305,49 +257,27 @@ const selectPreset = (preset: MeteorPreset) => {
   }
 }
 
-
-
-
 const generateRandomMeteorFunc = () => {
   const randomMeteor = generateRandomMeteor();
   selectedPresetName.value = randomMeteor.name;
 
-  meteor.mass = Number(randomMeteor.mass) || 0;
-  meteor.speed = Number(randomMeteor.speed) || 0;
-  meteor.angle = Number(randomMeteor.angle) || 0;
-  meteor.year = Number(randomMeteor.year) || 2025;
-
-  switch(randomMeteor.type) {
-    case "STONY": meteor.type = eMeteorType.STONY; break;
-    case "IRON": meteor.type = eMeteorType.IRON; break;
-    case "STONY_IRON": meteor.type = eMeteorType.STONY_IRON; break;
-    default: meteor.type = eMeteorType.STONY;
-  }
-
-  switch(randomMeteor.material) {
-    case "STONE": meteor.material = eMeteorMaterial.STONE; break;
-    case "IRON": meteor.material = eMeteorMaterial.IRON; break;
-    case "MIXED": meteor.material = eMeteorMaterial.MIXED; break;
-    default: meteor.material = eMeteorMaterial.STONE;
-  }
-
-  switch(randomMeteor.weather) {
-    case "CLEAR": meteor.weather = eWeatherType.CLEAR; break;
-    case "RAIN": meteor.weather = eWeatherType.RAIN; break;
-    case "SNOW": meteor.weather = eWeatherType.SNOW; break;
-    default: meteor.weather = eWeatherType.CLEAR;
-  }
-
-  meteor.latitude = Number(randomMeteor.latitude) || 0;
-  meteor.longitude = Number(randomMeteor.longitude) || 0;
-
-  console.log('Random coordinates:', meteor.latitude, meteor.longitude);
-  console.log('Types:', typeof meteor.latitude, typeof meteor.longitude);
+  // Просто копіюємо всі дані
+  Object.assign(meteor, {
+    mass: randomMeteor.mass,
+    speed: randomMeteor.speed,
+    angle: randomMeteor.angle,
+    year: randomMeteor.year,
+    type: randomMeteor.type,
+    material: randomMeteor.material,
+    weather: randomMeteor.weather,
+    latitude: randomMeteor.latitude,
+    longitude: randomMeteor.longitude
+  });
 
   estimatedCasualties.value = calculateCasualties(randomMeteor);
 
   if (map.value) {
-    const latlng = new L.LatLng(meteor.latitude, meteor.longitude);
+    const latlng = new L.LatLng(randomMeteor.latitude, randomMeteor.longitude);
 
     if (marker.value) {
       marker.value.setLatLng(latlng);
@@ -355,7 +285,7 @@ const generateRandomMeteorFunc = () => {
       marker.value = L.marker(latlng, { icon: customIcon }).addTo(map.value);
     }
 
-    map.value.flyTo(latlng, 6, {
+    map.value.panTo(latlng, {
       animate: true,
       duration: SETTINGS_ZOOM_ANIMATION_DURATION
     });
@@ -364,11 +294,11 @@ const generateRandomMeteorFunc = () => {
 
 watch([() => meteor.mass, () => meteor.speed, () => meteor.angle, () => meteor.latitude, () => meteor.longitude], () => {
   if (meteor.mass && meteor.speed && meteor.angle) {
-    const tempMeteor: MeteorPreset = {
+    const tempMeteor: iMeteorPreset = {
       name: selectedPresetName.value || "Custom",
       year: meteor.year,
       mass: meteor.mass,
-      speed: meteor.speed * 1000,
+      speed: meteor.speed,
       angle: meteor.angle,
       latitude: meteor.latitude,
       longitude: meteor.longitude,

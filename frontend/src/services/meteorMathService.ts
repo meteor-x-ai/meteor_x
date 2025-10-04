@@ -9,9 +9,14 @@ const getZoomForRadius = (radiusMeters: number): number => {
 }
 
 const getRadiusOverTime = (kineticEnergy: number, angleCoefficient: number, weatherCoefficient: number) => {
-    const k = 0.1;
     return RADIUS_TIMES_IN_SECONDS.map(t => {
-        const radius = k * Math.pow(kineticEnergy, 1/5) * Math.pow(t, 2/5) * angleCoefficient * weatherCoefficient;
+        const energyFactor = Math.pow(kineticEnergy, 1/3);
+        const timeFactor = Math.pow(t, 2/5);
+
+        const k = kineticEnergy > 1e20 ? 0.001 : 0.1;
+
+        const radius = k * energyFactor * timeFactor * angleCoefficient * weatherCoefficient;
+
         return { radius, time: t };
     });
 }

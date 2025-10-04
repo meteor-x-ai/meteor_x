@@ -1,4 +1,3 @@
-
 .meteor--presets__container {
     position: fixed;
     top: 20px;
@@ -7,7 +6,7 @@
     background: rgba(255, 255, 255, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
-    padding: 15px;
+    padding: 12px; /* Зменшено з 15px до 12px */
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-size: 14px;
     color: #333;
@@ -29,6 +28,7 @@
 .meteor--presets__container input,
 .meteor--presets__container select {
     width: 100%;
+    box-sizing: border-box;
     padding: 6px 8px;
     margin-bottom: 12px;
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -46,35 +46,18 @@
     background: rgba(255, 255, 255, 0.95);
 }
 
-.meteor--presets__container button {
-    width: 205px;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.6);
-    color: #333;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(5px);
-}
-
-.meteor--presets__container button:hover {
-    background: rgba(255, 255, 255, 0.8);
-    transform: translateY(-1px);
-}
-
-.dropdown {
+/* Стилі для dropdown - ВИПРАВЛЕНО */
+.meteor--presets__container .dropdown {
     position: relative;
-    display: inline-block;
-    width: 100px;
+    display: block;
+    width: 100%; /* Змінено з 100px на 100% */
+    margin-bottom: 12px; /* Повернемо до стандартного відступу */
 }
 
-.dropdown-btn {
+.meteor--presets__container .dropdown-btn {
     width: 100%;
+    box-sizing: border-box;
     padding: 6px 8px;
-    margin-bottom: 12px;
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.6);
@@ -87,23 +70,50 @@
     align-items: center;
     backdrop-filter: blur(5px);
     transition: all 0.2s ease;
+    outline: none;
 }
 
-.dropdown-btn:hover {
+.meteor--presets__container .dropdown-btn:hover {
     border-color: rgba(0, 0, 0, 0.4);
     background: rgba(255, 255, 255, 0.8);
 }
 
-.arrow {
+.meteor--presets__container .arrow {
     margin-left: 10px;
     transition: transform 0.2s;
 }
 
-.arrow.open {
+.meteor--presets__container .arrow.open {
     transform: rotate(180deg);
 }
 
-.dropdown-menu {
+/* Стилі для кнопки Random Meteorite */
+.meteor--presets__container .random-meteor-btn {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 8px;
+    margin-top: 8px; /* Додано відступ зверху */
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    color: #333;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
+    outline: none;
+    display: block;
+}
+
+.meteor--presets__container .random-meteor-btn:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateY(-1px);
+}
+
+/* Dropdown menu */
+.meteor--presets__container .dropdown-menu {
     position: absolute;
     top: 0;
     right: 100%;
@@ -121,7 +131,7 @@
     animation: dropdownFade 0.2s ease;
 }
 
-.dropdown.open-up .dropdown-menu {
+.meteor--presets__container .dropdown.open-up .dropdown-menu {
     top: auto;
     bottom: 100%;
     transform-origin: bottom left;
@@ -138,28 +148,28 @@
     }
 }
 
-.preset-item {
+.meteor--presets__container .preset-item {
     padding: 10px 12px;
     cursor: pointer;
     transition: background 0.2s;
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.preset-item:last-child {
+.meteor--presets__container .preset-item:last-child {
     border-bottom: none;
 }
 
-.preset-item:hover {
+.meteor--presets__container .preset-item:hover {
     background: rgba(255, 255, 255, 0.8);
 }
 
-.preset-name {
+.meteor--presets__container .preset-name {
     font-weight: 600;
     margin-bottom: 2px;
     color: #333;
 }
 
-.preset-casualties {
+.meteor--presets__container .preset-casualties {
     font-size: 12px;
     color: #666;
 }
@@ -172,16 +182,13 @@
     backdrop-filter: blur(5px);
     gap: 5px;
     padding: 10px;
+    margin-bottom: 12px;
 }
 
 .casualties--number {
     font-weight: 600;
     color: #856404;
     font-size: 14px;
-}
-
-.random-meteor-btn {
-    margin-top: 10px;
 }
 
 .meteor--info__link:disabled {
