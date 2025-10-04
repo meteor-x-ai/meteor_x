@@ -2,15 +2,20 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from "./router.ts";
 
+import Particles from "@tsparticles/vue3";
+import { loadFull } from "tsparticles"
 import "leaflet/dist/leaflet.css";
 import './style.css'
 import "@/css/keyframes.css"
 
 const app = createApp(App)
-
 app.use(router)
+app.use(Particles, {
+    init: async (engine) => {
+        await loadFull(engine);
+    },
+});
 app.mount('#app')
-
 console.log(" /$$      /$$             /$$                                         /$$   /$$\n" +
     "| $$$    /$$$            | $$                                        | $$  / $$\n" +
     "| $$$$  /$$$$  /$$$$$$  /$$$$$$    /$$$$$$   /$$$$$$   /$$$$$$       |  $$/ $$/\n" +

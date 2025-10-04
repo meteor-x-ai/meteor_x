@@ -312,10 +312,18 @@ def handle_join_existing_room(data):
             emit("error", {"message": "Not user name"}, to=request.sid)
             return
 
+        users = []
+        for user_id in room_data["users"]:
+            db.collection("users").document(user_id)
+            users.append({
+                "id": user_id,
+                "username": get_user_name(user_id) or "Unknown"
+            })
+
         emit("room_joined", {
             "roomId": room_id,
             "code": room_code,
-            "users": room_data["users"]
+            "users": users
         }, to=request.sid)
 
         emit("room_changed", {
@@ -354,7 +362,7 @@ def handle_start_game(data):
             return
 
         db.collection("rooms").document(room_id).update({"status": "playing"})
-        emit("game_redirect", {"message": "Game starting!"}, room=room_id)
+        emit("game_redirect", True, room=room_id)
 
     except Exception as e:
         emit("error", {"message": f"Server error: {str(e)}"}, to=request.sid)

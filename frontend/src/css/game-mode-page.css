@@ -114,7 +114,7 @@
     cursor: default;
 }
 
-.user--container:not(.current):hover {
+.user--container:not(.current):not(.user--container--room):hover {
     color: var(--red);
     background-color: rgba(var(--red-n), .1);
 

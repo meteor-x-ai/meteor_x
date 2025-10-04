@@ -4,13 +4,6 @@
     --black-n: 0, 0, 0;
     --black: rgb(var(--black-n));
 
-    --green-n: 1, 163, 1;
-    --green: rgb(var(--green-n));
-
-    --red-n: 245, 73, 39;
-    --red: rgb(var(--red-n));
-    --yellow: yellow;
-
     --border-sm: 10px;
     --border-md: calc(var(--border-sm) * 2);
     --border-lg: calc(var(--border-sm) * 3);
@@ -23,10 +16,14 @@
     --bacdrop-filter-sm: blur(4px);
     --bacdrop-filter-md: blur(12px);
 
-    --font-md: 16px;
-    --font-lg: 40px;
-
+    --font-md: .9rem;
     --tr-duration: .2s;
+
+    --primary-color: #3b82f6;
+    --primary-hover: #2563eb;
+    --primary-color-alpha: rgba(59, 130, 246, 0.2);
+    --error-color: #960018;
+    --grey-border: #bbb;
 }
 
 * {
@@ -45,18 +42,4 @@ html, body {
 
 button {
     user-select: none;
-}
-
-ol {
-    margin: 0;
-    padding: 0;
-}
-
-.game--mode__page {
-    width: 100%;
-    height: 100dvh;
-    background-image: url("/game-background.jpg");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
 }

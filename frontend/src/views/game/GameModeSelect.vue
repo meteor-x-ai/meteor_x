@@ -46,6 +46,7 @@
                     <button
                         class="game--mode__button"
                         v-if="roomInfo.id"
+                        @click="startGame"
                         :disabled="users.length !== 4"
                     >
                         Start
@@ -56,9 +57,8 @@
                 <span>Code: {{roomInfo.code}}</span>
                 <span>Users ↓</span>
                 <div
-                    class="user--container"
+                    class="user--container user--container--room"
                     :class="{'current': user.id === currentUser?.id}"
-                    @click="removeUser(user.id)"
                     v-for="(user, i) in users"
                 >
                     {{i+1}}.{{user.username}}
@@ -120,7 +120,7 @@ const roomCodeInput = ref<string>("")
 
 const pendingAuth = ref<boolean>(true);
 
-const changeQueryMode = () => {
+const changeQueryMode = async () => {
     const newQuery = { ...route.query };
 
     if (currentMode.value === 'select') {
@@ -132,7 +132,7 @@ const changeQueryMode = () => {
         delete newQuery.code;
     }
 
-    router.replace({
+    await router.replace({
         path: route.path,
         query: newQuery
     })
@@ -172,6 +172,18 @@ const initializeSocket = () => {
     newSocket.on("error", (err) => {
         console.error("Socket error:", err);
     });
+
+    newSocket.on("game_redirect", async (data) => {
+        if (data) {
+            await router.push({
+                name: 'game-coop-mode',
+                params: {
+                    roomCode: roomInfo.code
+                }
+            })
+        }
+    })
+
 
     socket.value = newSocket;
     return newSocket;
@@ -221,10 +233,6 @@ const codeManipulations = async () => {
                     })
                 });
 
-                newSocket.on("lobby_update", (data) => {
-                    console.log("Lobby update:", data);
-                });
-
             } catch (error) {
                 console.error("Error creating room:", error);
             }
@@ -245,10 +253,8 @@ const joinRoom = async () => {
         });
 
         newSocket.on("room_joined", (data) => {
-            console.log(data)
             users.value = data.users;
             roomInfo.id = data.roomId;
-            console.log(data.code)
             roomInfo.code = data.code;
             currentMode.value = 'room';
         });
@@ -262,9 +268,17 @@ const removeUser = (id: string) => {
     console.log(id)
 }
 
-watch(currentMode, () => {
-    changeQueryMode();
-    codeManipulations();
+const startGame = async () => {
+    if (!socket.value?.connected) return
+    console.log("Start game")
+    socket.value.emit("start_game", {
+        roomId: roomInfo.id,
+    });
+}
+
+watch(currentMode, async () => {
+    await changeQueryMode();
+    await codeManipulations();
 })
 
 onBeforeMount(async () => {
@@ -274,7 +288,7 @@ onBeforeMount(async () => {
         currentMode.value = route.query.mode as modes;
     }
 
-    changeQueryMode();
+    await changeQueryMode();
     await codeManipulations();
 
     pendingAuth.value = false
