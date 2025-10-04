@@ -165,7 +165,8 @@
 </template>
 
 <script setup lang="ts">
-import L from "leaflet"
+import * as L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import {computed, nextTick, onMounted, reactive, ref, watch} from "vue";
 import "@/css/map-page.css";
 import {eMeteorMaterial, eMeteorType, eWeatherType} from "@/enums/meteor-enums.ts";
@@ -248,20 +249,45 @@ const selectPreset = (preset: MeteorPreset) => {
   selectedPresetName.value = preset.name;
   isDropdownOpen.value = false;
 
-  meteor.mass = preset.mass;
-  meteor.speed = preset.speed;
-  meteor.angle = preset.angle;
-  meteor.year = preset.year;
-  meteor.type = preset.type;
-  meteor.material = preset.material;
-  meteor.weather = preset.weather;
-  meteor.latitude = preset.latitude;
-  meteor.longitude = preset.longitude;
+  meteor.mass = Number(preset.mass) || 0;
+  meteor.speed = Number(preset.speed) || 0;
+  meteor.angle = Number(preset.angle) || 0;
+  meteor.year = Number(preset.year) || 2025;
+
+  switch(preset.type) {
+    case "STONY": meteor.type = eMeteorType.STONY; break;
+    case "IRON": meteor.type = eMeteorType.IRON; break;
+    case "STONY_IRON": meteor.type = eMeteorType.STONY_IRON; break;
+    default: meteor.type = eMeteorType.STONY;
+  }
+
+  switch(preset.material) {
+    case "STONE": meteor.material = eMeteorMaterial.STONE; break;
+    case "IRON": meteor.material = eMeteorMaterial.IRON; break;
+    case "MIXED": meteor.material = eMeteorMaterial.MIXED; break;
+    default: meteor.material = eMeteorMaterial.STONE;
+  }
+
+  switch(preset.weather) {
+    case "CLEAR": meteor.weather = eWeatherType.CLEAR; break;
+    case "RAIN": meteor.weather = eWeatherType.RAIN; break;
+    case "SNOW": meteor.weather = eWeatherType.SNOW; break;
+    default: meteor.weather = eWeatherType.CLEAR;
+  }
+
+  meteor.latitude = Number(preset.latitude) || 0;
+  meteor.longitude = Number(preset.longitude) || 0;
+
+  console.log('Updated meteor values:', {
+    type: meteor.type,
+    material: meteor.material,
+    weather: meteor.weather
+  });
 
   estimatedCasualties.value = calculateCasualties(preset);
 
   if (map.value) {
-    const latlng = new L.LatLng(preset.latitude, preset.longitude);
+    const latlng = new L.LatLng(meteor.latitude, meteor.longitude);
 
     if (marker.value) {
       marker.value.setLatLng(latlng);
@@ -276,14 +302,17 @@ const selectPreset = (preset: MeteorPreset) => {
   }
 }
 
+
+
+
 const generateRandomMeteorFunc = () => {
   const randomMeteor = generateRandomMeteor();
   selectedPresetName.value = randomMeteor.name;
 
-  meteor.mass = randomMeteor.mass;
-  meteor.speed = randomMeteor.speed;
-  meteor.angle = randomMeteor.angle;
-  meteor.year = randomMeteor.year;
+  meteor.mass = Number(randomMeteor.mass) || 0;
+  meteor.speed = Number(randomMeteor.speed) || 0;
+  meteor.angle = Number(randomMeteor.angle) || 0;
+  meteor.year = Number(randomMeteor.year) || 2025;
 
   switch(randomMeteor.type) {
     case "STONY": meteor.type = eMeteorType.STONY; break;
@@ -306,13 +335,16 @@ const generateRandomMeteorFunc = () => {
     default: meteor.weather = eWeatherType.CLEAR;
   }
 
-  meteor.latitude = randomMeteor.latitude;
-  meteor.longitude = randomMeteor.longitude;
+  meteor.latitude = Number(randomMeteor.latitude) || 0;
+  meteor.longitude = Number(randomMeteor.longitude) || 0;
+
+  console.log('Random coordinates:', meteor.latitude, meteor.longitude);
+  console.log('Types:', typeof meteor.latitude, typeof meteor.longitude);
 
   estimatedCasualties.value = calculateCasualties(randomMeteor);
 
   if (map.value) {
-    const latlng = new L.LatLng(randomMeteor.latitude, randomMeteor.longitude);
+    const latlng = new L.LatLng(meteor.latitude, meteor.longitude);
 
     if (marker.value) {
       marker.value.setLatLng(latlng);
@@ -745,15 +777,100 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
 .meteor--presets__container {
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 15px;
-  margin-bottom: 15px;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 200px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 15px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: #333;
+  z-index: 2000;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.meteor--presets__container label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+  font-size: 12px;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.meteor--presets__container input,
+.meteor--presets__container select {
+  width: 100%;
+  padding: 6px 8px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  color: #333;
+  outline: none;
+  backdrop-filter: blur(5px);
+}
+
+.meteor--presets__container input:focus,
+.meteor--presets__container select:focus {
+  border-color: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.meteor--presets__container button {
+  width: 100%;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.6);
+  color: #333;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(5px);
+}
+
+.meteor--presets__container button:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateY(-1px);
 }
 
 .dropdown {
   position: relative;
   display: inline-block;
+  width: 100%;
+}
+
+.dropdown-btn {
+  width: 100%;
+  padding: 6px 8px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(5px);
+  transition: all 0.2s ease;
+}
+
+.dropdown-btn:hover {
+  border-color: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .arrow {
@@ -768,44 +885,57 @@ onMounted(() => {
 .dropdown-menu {
   position: absolute;
   top: 0;
-  left: 100%;
+  right: 100%;
   z-index: 9999;
-
-  background: #fff;
-  border: 1px solid #ddd;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   padding: 5px 0;
   max-height: 250px;
   overflow-y: auto;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-  min-width: 180px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
   white-space: nowrap;
+  backdrop-filter: blur(10px);
+  animation: dropdownFade 0.2s ease;
 }
 
 .dropdown.open-up .dropdown-menu {
   top: auto;
   bottom: 100%;
-  transform-origin: bottom right;
+  transform-origin: bottom left;
 }
 
 @keyframes dropdownFade {
-  from { opacity: 0; transform: scaleY(0.9); }
-  to   { opacity: 1; transform: scaleY(1); }
+  from {
+    opacity: 0;
+    transform: scaleY(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
 }
 
 .preset-item {
-  padding: 8px 12px;
+  padding: 10px 12px;
   cursor: pointer;
   transition: background 0.2s;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.preset-item:last-child {
+  border-bottom: none;
 }
 
 .preset-item:hover {
-  background: #f5f5f5;
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .preset-name {
   font-weight: 600;
   margin-bottom: 2px;
+  color: #333;
 }
 
 .preset-casualties {
@@ -814,18 +944,23 @@ onMounted(() => {
 }
 
 .casualties--display {
-  background: #fff3cd;
-  border: 1px solid #ffeaa7;
+  background: rgba(255, 243, 205, 0.9);
+  border: 1px solid rgba(255, 234, 167, 0.8);
   border-radius: 8px;
   padding: 10px;
   margin-bottom: 15px;
   text-align: center;
+  backdrop-filter: blur(5px);
 }
 
 .casualties--number {
   font-weight: 600;
   color: #856404;
   font-size: 14px;
+}
+
+.random-meteor-btn {
+  margin-top: 10px;
 }
 
 .meteor--info__link:disabled {
