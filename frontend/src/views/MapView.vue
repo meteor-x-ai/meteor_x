@@ -1,6 +1,5 @@
 <template>
     <div class="map--view" id="map">
-
         <teleport to="body">
             <div v-if="!watchMode" class="meteor--container">
                 <div class="meteor--info__container">
@@ -11,7 +10,11 @@
                             type="number"
                             class="meteor--info__input"
                             v-model.number="meteor.mass"
+                            min="10"
+                            max="1000000000"
+                            @input= "meteor.mass < 10 ? meteor.mass = 10 : null"
                         >
+                        <div v-if="errors.mass" class="error">{{ errors.mass }}</div>
                     </div>
                     <div class="meteor--info__input--container">
                         <label class="meteor--info__input--label">Speed <span class="meteor--info__input--label--text">5-70</span>km/s</label>
@@ -20,16 +23,23 @@
                             type="number"
                             class="meteor--info__input"
                             v-model.number="meteor.speed"
+                            @input="meteor.speed < 5 ? meteor.speed = 5 : null"
                         >
+                        <div v-if="errors.speed" class="error">{{ errors.speed }}</div>
                     </div>
                     <div class="meteor--info__input--container">
                         <label class="meteor--info__input--label">Angle  <span class="meteor--info__input--label--text">1-180</span></label>
+                        <!--TODO нужно что бы диапазон был 1-180-->
                         <input
                             placeholder="Input angle"
                             type="number"
                             class="meteor--info__input"
                             v-model.number="meteor.angle"
+                            min="0"
+                            max="180"
+                            @input="meteor.angle < 1 ? meteor.angle= 1 : null"
                         >
+                        <div v-if="errors.angle" class="error">{{ errors.angle }}</div>
                     </div>
                     <div class="meteor--info__input--container">
                         <label class="meteor--info__input--label">Year</label>
@@ -38,6 +48,9 @@
                             type="number"
                             class="meteor--info__input"
                             v-model.number="meteor.year"
+                            min="0"
+                            max="2026"
+                            @input="meteor.year < 0 ? meteor.year = 0 : null"
                         >
                     </div>
                     <div class="meteor--info__input--container">
@@ -70,7 +83,6 @@
                 </div>
             </div>
         </teleport>
-
         <teleport to="body">
             <div v-if="!watchMode" class="meteor--tools__container">
                 <button @click="setWatchMode" class="meteor--info__link">
@@ -90,31 +102,12 @@
                 </button>
             </div>
         </teleport>
-
-        <teleport to="body">
-            <div class="meteor--active__settings" v-if="calculatedData">
-                <button
-                    v-for="step in calculatedData?.radiusOverTime"
-                    :key="step.time"
-                    @click="showRadius(step.time)"
-                    class="meteor--info__link"
-                    :class="{ 'no-active': activeRadiusTime && activeRadiusTime !== step.time }"
-                >
-                    {{ (step.time / 60) }} min
-                </button>
-                <button @click="showAllRadii" class="meteor--info__link">
-                    Show All
-                </button>
-            </div>
-        </teleport>
-
         <teleport to="body">
             <div v-if="showMap" class="minimap--container">
                 <span>Mini map</span>
                 <div id="miniMap"></div>
             </div>
         </teleport>
-
     </div>
 </template>
 
@@ -123,8 +116,9 @@ import L from "leaflet"
 import {computed, nextTick, onMounted, reactive, ref, watch} from "vue";
 import "@/css/map-page.css";
 import {eMeteorMaterial, eMeteorType, eWeatherType} from "@/enums/meteor-enums.ts";
-import type {iCalculatedData, iUserInput} from "@/models/meteor-models.ts";
-import {computeCalculated, getZoomForRadius} from "@/services/meteorMathService.ts";
+import type {iUserInput } from "@/models/meteor-models.ts";
+import {getZoomForRadius} from "@/services/meteorMathService.ts";
+import {predictMeteor} from "@/services/generateDataService.ts";
 
 const SETTINGS_ZOOM_ANIMATION_DURATION: number = 1.5
 const SETTINGS_DEFAULT_ZOOM_COUNT: number = 5
@@ -135,8 +129,6 @@ const miniMap = ref<L.Map | null>(null)
 const miniBoundsRect = ref<L.Rectangle | null>(null);
 const marker = ref<L.Marker | null>(null)
 const circles: L.Circle[] = []
-const calculatedData = ref<iCalculatedData | null>(null)
-const activeRadiusTime = ref<number | null>(null)
 
 const watchMode = ref<boolean>(false)
 const firstOpenWatchMode = ref<boolean>(true)
@@ -154,6 +146,44 @@ const meteor = reactive<iUserInput>({
     latitude: 40,
     longitude: -100
 });
+const errors=reactive({
+    mass:"",
+    speed:"",
+    angle:"",
+    year:"",
+})
+watch(() => meteor.mass, (val) => {
+    if (val < 10) {
+        errors.mass = "Mass must be at least 10";
+    } else {
+        errors.mass = "";
+    }
+});
+watch(() => meteor.speed, (val) => {
+    if (val < 5) {
+        errors.speed = "Speed must be at least 5";
+    } else {
+        errors.speed = "";
+    }
+});
+watch(() => meteor.angle, (val) => {
+    if (val < 1) {
+        errors.angle = "Angle must be at least 1";
+    } else{
+        errors.angle = "";
+    }
+});
+watch(() => meteor.year, (val) => {
+    if (val < 0) {
+        errors.year = "Год должен быть больше или равен 0";
+    } else if (val > 2026) {
+        errors.year = "Год должен быть меньше или равен 2026";
+    } else {
+        errors.year = "";
+    }
+});
+
+
 const showMap = computed(() => currentZoom.value >= 8)
 const canMeteor = computed(() =>
     meteor.mass !== null && Number(meteor.mass) > 0 &&
@@ -219,7 +249,6 @@ const clearCircles = () => {
 
 const clearCirclesAndTarget = () => {
     clearCircles()
-    calculatedData.value = null
     if (marker.value) {
         marker.value.remove()
         marker.value = null
@@ -228,12 +257,12 @@ const clearCirclesAndTarget = () => {
 
 const meteorClick = async () => {
     clearCircles();
-    activeRadiusTime.value = null
-    calculatedData.value = computeCalculated(meteor)
 
-    if (calculatedData.value === null) return;
+    const predict = (await predictMeteor(meteor)).prediction
+    console.log(meteor)
+    console.log(predict)
 
-    const craterRadius = calculatedData.value.baseCraterRadius
+    const craterRadius = predict.crater_radius_inner + predict.crater_radius_middle + predict.crater_radius_outer;
 
     const latlng = marker.value?.getLatLng();
     const numCircles = 3;
@@ -250,7 +279,11 @@ const meteorClick = async () => {
     }
 
     setTimeout(() => {
-        const radii = calculatedData.value!.radiusOverTime.map(r => r.radius);
+        const radii = [
+            predict.crater_radius_inner,
+            predict.crater_radius_middle,
+            predict.crater_radius_outer
+        ];
 
         radii.forEach(radius => {
             const circle = L.circle([latlng.lat, latlng.lng], {
@@ -263,7 +296,6 @@ const meteorClick = async () => {
             }).addTo(map.value as L.Map);
             circles.push(circle);
         });
-        activeRadiusTime.value = null
     }, SETTINGS_ZOOM_ANIMATION_DURATION * 1000);
 }
 
@@ -295,46 +327,6 @@ const setupMiniBounds = () => {
         miniBoundsRect.value.setBounds(bounds);
     }
 }
-
-const showRadius = (timeSec: number) => {
-    clearCircles();
-    if (!marker.value || !map.value || !calculatedData.value) return;
-
-    activeRadiusTime.value = timeSec;
-    const step = calculatedData.value.radiusOverTime.find(r => r.time === timeSec);
-    if (!step) return;
-
-    const latlng = marker.value.getLatLng();
-    const circle = L.circle([latlng.lat, latlng.lng], {
-        radius: step.radius,
-        color: 'red',
-        fillColor: 'orange',
-        fillOpacity: 0.2,
-        weight: 2,
-        dashArray: '5,5'
-    }).addTo(map.value as L.Map);
-    circles.push(circle);
-};
-
-const showAllRadii = () => {
-    clearCircles();
-    if (!marker.value || !map.value || !calculatedData.value) return;
-
-    activeRadiusTime.value = null
-    const latlng = marker.value.getLatLng();
-
-    calculatedData.value.radiusOverTime.forEach(step => {
-        const circle = L.circle([latlng.lat, latlng.lng], {
-            radius: step.radius,
-            color: 'red',
-            fillColor: 'orange',
-            fillOpacity: 0.2,
-            weight: 2,
-            dashArray: '5,5'
-        }).addTo(map.value as L.Map);
-        circles.push(circle);
-    });
-};
 
 watch(showMap, async (newValue) => {
     if (newValue) {
