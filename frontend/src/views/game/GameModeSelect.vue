@@ -10,7 +10,8 @@
                         @click="currentMode = 'coop'"
                         :disabled="!currentUser"
                     >
-                        Coop</button>
+                        Coop
+                    </button>
                 </div>
             </template>
             <template v-else-if="currentMode === 'coop'">
@@ -31,9 +32,14 @@
             <template v-else-if="currentMode === 'create'">
                 <div v-if="createdCoopCode">Code: {{createdCoopCode}}</div>
                 <span v-else>Code: <span class="code--loading">loading...</span></span>
-                Users ↓
-                <div class="user--container" v-for="user in users">
-                    {{user.username}}
+                <span v-if="createdCoopCode">Users ↓</span>
+                <div
+                    class="user--container"
+                    :class="{'current': user.id === currentUser?.id}"
+                    @click="removeUser(user.id)"
+                    v-for="(user, i) in users"
+                >
+                    {{i+1}}.{{user.username}}
                 </div>
                 <div class="button__container">
                     <button class="game--mode__button" @click="handleReturn">Return</button>
@@ -121,6 +127,7 @@ const initializeSocket = () => {
     newSocket.on("room_changed", (data) => {
         switch (data.type) {
             case eGameRoomChangedTypes.USER_ADDED:
+                console.log(data)
                 users.value.push({
                     id: data.userId,
                     username: data.username
@@ -202,6 +209,10 @@ const joinRoom = async () => {
     }
 }
 
+const removeUser = (id: string) => {
+
+}
+
 watch(currentMode, () => {
     changeQueryMode();
     codeManipulations();
@@ -214,14 +225,11 @@ onBeforeMount(async () => {
         currentMode.value = route.query.mode as modes;
     }
 
-    pendingAuth.value = false
-})
-
-onMounted(async () => {
     changeQueryMode();
     codeManipulations();
-})
 
+    pendingAuth.value = false
+})
 onUnmounted(() => {
     cleanupSocket();
 });

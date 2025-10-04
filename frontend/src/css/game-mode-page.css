@@ -108,14 +108,17 @@
 }
 
 .user--container {
-    cursor: pointer;
     transition: all var(--tr-duration);
     width: max-content;
+
+    cursor: default;
 }
 
-.user--container:hover {
+.user--container:not(.current):hover {
     color: var(--red);
     background-color: rgba(var(--red-n), .1);
+
+    cursor: pointer;
 }
 
 .login--info--container {

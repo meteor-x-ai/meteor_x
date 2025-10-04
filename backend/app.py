@@ -69,7 +69,7 @@ def is_user_logged_in():
     user_data = doc.to_dict()
     username = user_data.get("username")
 
-    return jsonify({"userId": user_id, "username": username}), 200
+    return jsonify({"id": user_id, "username": username}), 200
 
 @app.route('/api/signup', methods=['POST'])
 def register_user():
