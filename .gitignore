@@ -1,0 +1,19 @@
+# IDE
+.idea/
+*.iml
+
+# Dependencies
+frontend/node_modules/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.env

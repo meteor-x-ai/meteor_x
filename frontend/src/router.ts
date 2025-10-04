@@ -4,6 +4,8 @@ import MainPage from "@/views/MainPage.vue";
 import GameModeSelect from "@/views/game/GameModeSelect.vue";
 import GamePage from "@/views/game/GamePage.vue";
 import GameRouter from "@/views/game/GameRouter.vue";
+import LoginPage from "@/views/LoginPage.vue";
+import SignupView from "@/views/SignupView.vue";
 
 const routes = [
     {
@@ -15,6 +17,16 @@ const routes = [
         path: '/map',
         name: 'map-page',
         component: MapView
+    },
+    {
+        path: '/login',
+        name: 'login-page',
+        component: LoginPage
+    },
+    {
+        path: '/signup',
+        name: 'signup-page',
+        component: SignupView
     },
     {
         path: '/game',
@@ -36,7 +48,7 @@ const routes = [
                 path: 'coop/:roomId',
                 name: 'game-coop-mode',
                 component: GamePage
-            },
+            }
         ]
     },
     {
