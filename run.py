@@ -3,9 +3,6 @@ import threading
 import sys
 from pathlib import Path
 
-#start main program
-main_path = Path(__file__).parent / "this" / "is" / "way"
-subprocess.run([sys.executable, str(main_path)])
 BASE_DIR = Path(__file__).parent
 BACKEND_DIR = BASE_DIR / "backend"
 FRONTEND_DIR = BASE_DIR / "frontend"
