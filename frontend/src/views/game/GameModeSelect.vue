@@ -5,7 +5,12 @@
             <template v-if="currentMode === 'select'">
                 <div class="button__container">
                     <router-link :to="{name: 'game-solo-mode'}" class="game--mode__button">Solo</router-link>
-                    <button class="game--mode__button" @click="currentMode = 'coop'">Coop</button>
+                    <button
+                        class="game--mode__button"
+                        @click="currentMode = 'coop'"
+                        :disabled="!currentUser"
+                    >
+                        Coop</button>
                 </div>
             </template>
             <template v-else-if="currentMode === 'coop'">
@@ -26,42 +31,55 @@
             <template v-else-if="currentMode === 'create'">
                 <div v-if="createdCoopCode">Code: {{createdCoopCode}}</div>
                 <span v-else>Code: <span class="code--loading">loading...</span></span>
-                <div>
-                    <div v-for="user in users">
-                        {{user}}
-                    </div>
+                Users ↓
+                <div class="user--container" v-for="user in users">
+                    {{user.username}}
                 </div>
                 <div class="button__container">
-                    <button class="game--mode__button" @click="currentMode = 'coop'">Return</button>
+                    <button class="game--mode__button" @click="handleReturn">Return</button>
                 </div>
             </template>
         </div>
+        <teleport to="body">
+            <div
+                class="login--info--container"
+                v-if="!pendingAuth"
+                :class="{'unauthenticated': !currentUser}"
+            >
+                <div v-if="currentUser?.username">{{currentUser.username}}</div>
+                <router-link
+                    v-else
+                    :to="{
+                        name: 'login-page',
+                        query: {
+                            redirect: 'game'
+                        }
+                    }"
+                >
+                    unauthenticated
+                </router-link>
+            </div>
+        </teleport>
     </div>
 </template>
 
 <script setup lang="ts">
 import "@/css/game-mode-page.css"
-import {onMounted, ref, watch} from "vue";
+import {onBeforeMount, onMounted, onUnmounted, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {io, Socket} from "socket.io-client";
 import {BACK_PATH_WS} from "@/repository/backendPath.ts";
 import {eGameRoomChangedTypes} from "@/enums/gameEnums.ts";
-
-interface iUser {
-    id: string;
-    username: string;
-}
+import authRepo from "@/repository/authRepo.ts";
+import type {iUser} from "@/models/user-models.ts";
 
 const route = useRoute();
 const router = useRouter();
 
 type modes = 'select' | 'coop' | 'create'
 
-const currentMode = ref<modes>(
-    (route.query.mode === 'coop' || route.query.mode === 'create')
-        ? route.query.mode
-        : 'select'
-)
+const currentMode = ref<modes>('select')
+const currentUser = ref<iUser | null>(null);
 
 const socket = ref<Socket | null>(null);
 const users = ref<iUser[]>([])
@@ -70,13 +88,15 @@ const createdCoopCode = ref<string>("")
 const createdCoopId = ref<string>("")
 const roomCodeInput = ref<string>("")
 
-const changeQueryMode = (mode: modes) => {
+const pendingAuth = ref<boolean>(true);
+
+const changeQueryMode = () => {
     const newQuery = { ...route.query };
 
-    if (mode === 'select') {
+    if (currentMode.value === 'select') {
         delete newQuery.mode;
     } else {
-        newQuery.mode = mode;
+        newQuery.mode = currentMode.value;
     }
 
     router.replace({
@@ -123,15 +143,24 @@ const initializeSocket = () => {
     return newSocket;
 };
 
-// const handleReturn = () => {
-//     cleanupSocket();
-//     currentMode.value = 'coop';
-// };
+const cleanupSocket = () => {
+    if (socket.value) {
+        socket.value.removeAllListeners();
+        socket.value.disconnect();
+        socket.value = null;
+        users.value = [];
+        createdCoopCode.value = "";
+        createdCoopId.value = "";
+    }
+};
 
-const codeManipulations = async (mode: modes) => {
-    if (mode === "create") {
-        console.log("Creating room...");
+const handleReturn = () => {
+    cleanupSocket();
+    currentMode.value = 'coop';
+};
 
+const codeManipulations = async () => {
+    if (currentMode.value === "create") {
         try {
             const newSocket = initializeSocket();
 
@@ -158,8 +187,6 @@ const codeManipulations = async (mode: modes) => {
 
 const joinRoom = async () => {
     try {
-        console.log(roomCodeInput.value)
-
         const newSocket = initializeSocket();
 
         newSocket.on("connect", () => {
@@ -170,26 +197,32 @@ const joinRoom = async () => {
             console.log("Room joined:", data);
         });
 
-        newSocket.on("room_changed", (data) => {
-            console.log("room_changed:", data);
-        });
-
     } catch (error) {
         console.error("Error joining room:", error);
     }
 }
 
-watch(currentMode, (newMode) => {
-    changeQueryMode(newMode);
-    codeManipulations(newMode);
+watch(currentMode, () => {
+    changeQueryMode();
+    codeManipulations();
+})
+
+onBeforeMount(async () => {
+    currentUser.value = await authRepo.auth();
+
+    if (currentUser.value && (route.query.mode === 'coop' || route.query.mode === 'create')) {
+        currentMode.value = route.query.mode as modes;
+    }
+
+    pendingAuth.value = false
 })
 
 onMounted(async () => {
-    changeQueryMode(currentMode.value);
-    codeManipulations(currentMode.value);
+    changeQueryMode();
+    codeManipulations();
 })
 
-// onUnmounted(() => {
-//     cleanupSocket();
-// });
+onUnmounted(() => {
+    cleanupSocket();
+});
 </script>

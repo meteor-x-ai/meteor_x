@@ -55,13 +55,14 @@
     animation: show--scale__animation var(--tr-duration);
 }
 
-.game--mode__button:hover {
+.game--mode__button:not(:disabled):hover {
     gap: 15px;
     box-shadow: 0 0 5px 2px rgba(var(--white-n), 0.5);
 }
 
 .game--mode__button:disabled {
     opacity: .5;
+    cursor: not-allowed;
 }
 
 .game--mode__button.return {
@@ -104,6 +105,55 @@
 
 .code--loading {
     animation: blinking__animation 2s infinite;
+}
+
+.user--container {
+    cursor: pointer;
+    transition: all var(--tr-duration);
+    width: max-content;
+}
+
+.user--container:hover {
+    color: var(--red);
+    background-color: rgba(var(--red-n), .1);
+}
+
+.login--info--container {
+    min-width: 100px;
+    height: 50px;
+    border-radius: var(--border-md);
+    background-color: var(--bg-color-container);
+    backdrop-filter: var(--bacdrop-filter-md);
+
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    padding: 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--white);
+
+    user-select: none;
+    transition: all var(--tr-duration);
+    animation: show--scale__animation var(--tr-duration);
+}
+
+.login--info--container.unauthenticated {
+    cursor: pointer;
+    background-color: rgba(var(--red-n), .3);
+}
+
+.login--info--container.unauthenticated a {
+    color: var(--white);
+    font-weight: normal;
+    text-decoration: none;
+}
+
+.login--info--container.unauthenticated:hover {
+    transform: scale(1.1);
 }
 
 @keyframes blinking__animation {

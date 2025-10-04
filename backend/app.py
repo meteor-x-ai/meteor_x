@@ -59,13 +59,17 @@ def prompt_handler():
 def is_user_logged_in():
     user_id = request.cookies.get("userId")
     if not user_id:
-        return False
+        return jsonify({"error": "Not logged in"}), 401
 
     user_ref = db.collection("users").document(user_id)
-    if not user_ref.get().exists:
-        return False
+    doc = user_ref.get()
+    if not doc.exists:
+        return jsonify({"error": "User not found"}), 401
 
-    return True
+    user_data = doc.to_dict()
+    username = user_data.get("username")
+
+    return jsonify({"userId": user_id, "username": username}), 200
 
 @app.route('/api/signup', methods=['POST'])
 def register_user():

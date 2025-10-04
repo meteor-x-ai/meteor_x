@@ -7,7 +7,8 @@
     --green-n: 1, 163, 1;
     --green: rgb(var(--green-n));
 
-    --red: red;
+    --red-n: 245, 73, 39;
+    --red: rgb(var(--red-n));
     --yellow: yellow;
 
     --border-sm: 10px;

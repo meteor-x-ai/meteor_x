@@ -1,4 +1,5 @@
 import {BACK_PATH_API} from "@/repository/backendPath.ts";
+import type {iUser} from "@/models/user-models.ts";
 
 const authRepo = {
     async login(username: string, password: string): Promise<string | null> {
@@ -42,7 +43,7 @@ const authRepo = {
         }
     },
 
-    async auth(): Promise<string | null> {
+    async auth(): Promise<iUser | null> {
         try {
             const res = await fetch(`${BACK_PATH_API}/auth`, {
                 method: "GET",
@@ -50,8 +51,8 @@ const authRepo = {
                 headers: { "Content-Type": "application/json" },
             })
 
-            if (res.status === 200) {
-                return (await res.json()).userId;
+            if (res.ok) {
+                return await res.json();
             }
 
             return null;

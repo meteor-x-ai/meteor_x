@@ -12,8 +12,9 @@
 <script setup lang="ts">
 import authRepo from "@/repository/authRepo.ts";
 import {ref} from "vue";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 
+const route = useRoute();
 const router = useRouter();
 
 const username = ref<string>("")
@@ -21,9 +22,15 @@ const passwordInput = ref<string>("")
 
 const loginWrapper = async () => {
     if (await authRepo.login(username.value, passwordInput.value)) {
-        await router.push({
-            name: 'main-page'
-        })
+        if (route.query.redirect === 'game') {
+            await router.push({
+                name: 'game-mode-select',
+            })
+        } else {
+            await router.push({
+                name: 'main-page'
+            })
+        }
     }
 }
 </script>
