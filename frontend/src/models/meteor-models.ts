@@ -12,10 +12,16 @@ export interface iUserInput {
     material: eMeteorMaterial;
 }
 
+export interface iRadiusOverTime {
+    radius: number;
+    time: number;
+}
+
 export interface iCalculatedData {
-    craterDepth: number;
     kineticEnergy: number;
     baseCraterRadius: number;
+    craterDepth: number;
     angleCoefficient: number;
     weatherCoefficient: number;
+    radiusOverTime: iRadiusOverTime[];
 }

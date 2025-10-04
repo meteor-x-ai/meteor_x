@@ -137,6 +137,10 @@
     transform: scale(1.2);
 }
 
+.meteor--info__link.no-active {
+    opacity: .5;
+}
+
 .meteor--info__link--img {
     width: 20px;
     height: 20px;
@@ -168,4 +172,19 @@
 
 #miniMap * {
     cursor: default;
+}
+
+.meteor--active__settings {
+    padding: 10px;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    display: flex;
+    gap: 10px;
+    background-color: var(--bg-color-container);
+    backdrop-filter: var(--bacdrop-filter-md);
+    border: 1px solid var(--white);
+    border-radius: var(--border-md) var(--border-md) 0 0;
 }
