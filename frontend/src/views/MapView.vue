@@ -3,31 +3,31 @@
         <teleport to="body">
             <div v-if="!watchMode" class="meteor--container">
                 <div class="meteor--info__container">
-                    <div class="meteor--info__input--container">
+                    <div class="meteor--info__input--container" :class="{'container-error': errors.mass}">
                         <label class="meteor--info__input--label">Mass <span class="meteor--info__input--label--text">10-1000000000</span>kg</label>
                         <input
                             placeholder="Input mass"
                             type="number"
                             class="meteor--info__input"
                             v-model.number="meteor.mass"
-                            min="10"
-                            max="1000000000"
-                            @input= "meteor.mass < 10 ? meteor.mass = 10 : null"
+                            @input="validateInput('mass', 10, 1000000000)"
+                            @keydown="preventNegative"
                         >
                         <div v-if="errors.mass" class="error">{{ errors.mass }}</div>
                     </div>
-                    <div class="meteor--info__input--container">
+                    <div class="meteor--info__input--container" :class="{'container-error': errors.speed}">
                         <label class="meteor--info__input--label">Speed <span class="meteor--info__input--label--text">5-70</span>km/s</label>
                         <input
                             placeholder="Input speed"
                             type="number"
                             class="meteor--info__input"
                             v-model.number="meteor.speed"
-                            @input="meteor.speed < 5 ? meteor.speed = 5 : null"
+                            @input="validateInput('speed', 5)"
+                            @keydown="preventNegative"
                         >
                         <div v-if="errors.speed" class="error">{{ errors.speed }}</div>
                     </div>
-                    <div class="meteor--info__input--container">
+                    <div class="meteor--info__input--container" :class="{'container-error': errors.angle}">
                         <label class="meteor--info__input--label">Angle  <span class="meteor--info__input--label--text">1-180</span></label>
                         <!--TODO нужно что бы диапазон был 1-180-->
                         <input
@@ -35,22 +35,20 @@
                             type="number"
                             class="meteor--info__input"
                             v-model.number="meteor.angle"
-                            min="0"
-                            max="180"
-                            @input="meteor.angle < 1 ? meteor.angle= 1 : null"
+                            @input="validateInput('angle', 1)"
+                            @keydown="preventNegative"
                         >
                         <div v-if="errors.angle" class="error">{{ errors.angle }}</div>
                     </div>
-                    <div class="meteor--info__input--container">
+                    <div class="meteor--info__input--container" :class="{'container-error': errors.year}">
                         <label class="meteor--info__input--label">Year</label>
                         <input
                             placeholder="Input year"
                             type="number"
                             class="meteor--info__input"
                             v-model.number="meteor.year"
-                            min="0"
-                            max="2026"
-                            @input="meteor.year < 0 ? meteor.year = 0 : null"
+                            @input="validateInput('year', 0, 2026)"
+                            @keydown="preventNegative"
                         >
                     </div>
                     <div class="meteor--info__input--container">
@@ -134,7 +132,6 @@ const watchMode = ref<boolean>(false)
 const firstOpenWatchMode = ref<boolean>(true)
 const currentZoom = ref<number>(SETTINGS_DEFAULT_ZOOM_COUNT)
 const meteor = reactive<iUserInput>({
-    //user input
     mass: 1e7,
     speed: 20,
     angle: 45,
@@ -142,48 +139,33 @@ const meteor = reactive<iUserInput>({
     type: eMeteorType.STONY,
     material: eMeteorMaterial.IRON,
     weather: eWeatherType.CLEAR,
-    //target location
     latitude: 40,
     longitude: -100
 });
-const errors=reactive({
-    mass:"",
-    speed:"",
-    angle:"",
-    year:"",
-})
-watch(() => meteor.mass, (val) => {
-    if (val < 10) {
-        errors.mass = "Mass must be at least 10";
-    } else {
-        errors.mass = "";
-    }
-});
-watch(() => meteor.speed, (val) => {
-    if (val < 5) {
-        errors.speed = "Speed must be at least 5";
-    } else {
-        errors.speed = "";
-    }
-});
-watch(() => meteor.angle, (val) => {
-    if (val < 1) {
-        errors.angle = "Angle must be at least 1";
-    } else{
-        errors.angle = "";
-    }
-});
-watch(() => meteor.year, (val) => {
-    if (val < 0) {
-        errors.year = "Год должен быть больше или равен 0";
-    } else if (val > 2026) {
-        errors.year = "Год должен быть меньше или равен 2026";
-    } else {
-        errors.year = "";
-    }
-});
 
+const errors = reactive<Record<'mass'|'speed'|'angle'|'year', string>>({
+    mass: "",
+    speed: "",
+    angle: "",
+    year: ""
+});
+function preventNegative(e: KeyboardEvent) {
+    if(e.key === "-") {
+        e.preventDefault();
+    }
+}
+type ErrorField = keyof typeof errors;
+function validateInput(field: ErrorField, min: number, max?: number) {
+    const value = meteor[field] as number;
 
+    if (value < min) {
+        errors[field] = `Minimum value ${min}`;
+    } else if (max !== undefined && value > max) {
+        errors[field] = `Maximum value ${max}`;
+    } else {
+        errors[field] = "";
+    }
+}
 const showMap = computed(() => currentZoom.value >= 8)
 const canMeteor = computed(() =>
     meteor.mass !== null && Number(meteor.mass) > 0 &&
