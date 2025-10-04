@@ -160,7 +160,7 @@ def generate_random_meteor():
 def validate_card_choice(card, meteor):
     if not meteor:
         return card in ["BUNKER", "EVACUATION"]
-    
+
     mass = meteor.get("mass", 0)
     speed = meteor.get("speed", 0)
     weather = meteor.get("weather", "CLEAR")
@@ -199,16 +199,16 @@ def handle_disconnect():
     user_id = request.cookies.get('userId')
     if not user_id:
         return
-    
+
     try:
         rooms_ref = db.collection("rooms")
         query = rooms_ref.where("users", "array_contains", user_id).where("status", "==", "waiting").stream()
-        
+
         for room_doc in query:
             room_data = room_doc.to_dict()
             room_id = room_doc.id
             current_users = room_data.get("users", [])
-            
+
             if user_id in current_users:
                 current_users.remove(user_id)
                 username = get_user_name(user_id)
@@ -228,14 +228,14 @@ def handle_disconnect():
 @socketio.on('join_room')
 def handle_join_lobby(data=None):
     user_id = request.cookies.get('userId')
-    
+
     if not user_id:
         emit("error", {"message": "Not authenticated"}, to=request.sid)
         return
 
     room_code = generate_room_code()
     room_id = str(uuid.uuid4())
-    
+
     try:
         db.collection("rooms").document(room_id).set({
             "code": room_code,
@@ -248,25 +248,25 @@ def handle_join_lobby(data=None):
                 "user_positions": {}
             }
         })
-        
+
         join_room(room_id)
         username = get_user_name(user_id)
 
         if not username:
             emit("error", {"message": "Not user name"}, to=request.sid)
             return
-        
+
         emit("room_created", {
-            "roomId": room_id, 
+            "roomId": room_id,
             "code": room_code
         }, to=request.sid)
-        
+
         emit("room_changed", {
             "userId": user_id,
             "username": username,
             "type": "USER_ADDED"
         }, room=room_id)
-        
+
     except Exception as e:
         emit("error", {"message": f"Server error: {str(e)}"}, to=request.sid)
 
@@ -274,11 +274,11 @@ def handle_join_lobby(data=None):
 def handle_join_existing_room(data):
     user_id = request.cookies.get('userId')
     room_code = data.get('code')
-    
+
     if not user_id:
         emit("error", {"message": "Not authenticated"}, to=request.sid)
         return
-    
+
     if not room_code:
         emit("error", {"message": "Room code required"}, to=request.sid)
         return
@@ -286,45 +286,45 @@ def handle_join_existing_room(data):
     try:
         rooms_ref = db.collection("rooms")
         query = rooms_ref.where("code", "==", room_code).where("status", "==", "waiting").stream()
-        
+
         room_doc = None
         for doc in query:
             room_data = doc.to_dict()
             if len(room_data["users"]) < 4:
                 room_doc = doc
                 break
-        
+
         if not room_doc:
             emit("error", {"message": "Room not found or full"}, to=request.sid)
             return
-        
+
         room_data = room_doc.to_dict()
         room_id = room_doc.id
-        
+
         if user_id not in room_data["users"]:
             room_data["users"].append(user_id)
             db.collection("rooms").document(room_id).update({"users": room_data["users"]})
-        
+
         join_room(room_id)
         username = get_user_name(user_id)
 
         if not username:
             emit("error", {"message": "Not user name"}, to=request.sid)
             return
-        
+
         emit("room_joined", {
             "roomId": room_id,
             "code": room_code,
             "users": room_data["users"]
         }, to=request.sid)
-        
+
         emit("room_changed", {
             "userId": user_id,
             "username": username,
             "type": "USER_ADDED",
             "total_users": len(room_data["users"])
         }, room=room_id)
-        
+
     except Exception as e:
         emit("error", {"message": f"Server error: {str(e)}"}, to=request.sid)
 
@@ -332,11 +332,11 @@ def handle_join_existing_room(data):
 def handle_start_game(data):
     user_id = request.cookies.get('userId')
     room_id = data.get('roomId')
-    
+
     if not user_id:
         emit("error", {"message": "Not authenticated"}, to=request.sid)
         return
-    
+
     if not room_id:
         emit("error", {"message": "Room ID required"}, to=request.sid)
         return
@@ -348,14 +348,14 @@ def handle_start_game(data):
             return
 
         room_data = room_doc.to_dict()
-        
+
         if len(room_data["users"]) != 4:
             emit("error", {"message": f"Need 4 players to start game. Current: {len(room_data['users'])}"}, to=request.sid)
             return
-        
+
         db.collection("rooms").document(room_id).update({"status": "playing"})
         emit("game_redirect", {"message": "Game starting!"}, room=room_id)
-        
+
     except Exception as e:
         emit("error", {"message": f"Server error: {str(e)}"}, to=request.sid)
 
@@ -367,7 +367,7 @@ def handle_join_game(data):
     if not user_id:
         emit("error", {"message": "Not authenticated"}, to=request.sid)
         return
-    
+
     if not room_id:
         emit("error", {"message": "Room ID required"}, to=request.sid)
         return
@@ -381,30 +381,30 @@ def handle_join_game(data):
         room_data = room_doc.to_dict()
         game_state = room_data.get("game_state", {})
         user_positions = game_state.get("user_positions", {})
-        
+
         if user_id not in user_positions:
             user_positions[user_id] = len(user_positions) + 1
-        
+
         user_number = user_positions[user_id]
         meteor = generate_random_meteor()
-        
+
         game_state["user_positions"] = user_positions
         game_state["current_meteor"] = meteor
-        
+
         db.collection("rooms").document(room_id).update({"game_state": game_state})
-        
+
         if len(user_positions) == 4:
             emit("game_started", {
                 "message": "All players joined!",
                 "user_positions": user_positions
             }, room=room_id)
-        
+
         emit("game_joined", {
             "userNumber": user_number,
             "meteor": meteor,
             "totalUsers": len(user_positions)
         }, to=request.sid)
-        
+
     except Exception as e:
         emit("error", {"message": f"Server error: {str(e)}"}, to=request.sid)
 
@@ -412,11 +412,11 @@ def handle_join_game(data):
 def handle_leave_room(data):
     user_id = request.cookies.get('userId')
     room_id = data.get('roomId')
-    
+
     if not user_id:
         emit("error", {"message": "Not authenticated"}, to=request.sid)
         return
-    
+
     if not room_id:
         emit("error", {"message": "Room ID required"}, to=request.sid)
         return
@@ -426,17 +426,17 @@ def handle_leave_room(data):
         if not room_doc.exists:
             emit("error", {"message": "Room not found"}, to=request.sid)
             return
-        
+
         room_data = room_doc.to_dict()
         current_users = room_data.get("users", [])
 
         if user_id not in current_users:
             emit("error", {"message": "You are not in this room"}, to=request.sid)
             return
-        
+
         current_users.remove(user_id)
         username = get_user_name(user_id)
-        
+
         if current_users:
             db.collection("rooms").document(room_id).update({"users": current_users})
             emit("room_changed", {
@@ -459,11 +459,11 @@ def handle_remove_user(data):
     user_id = request.cookies.get('userId')
     room_id = data.get('roomId')
     target_user_id = data.get('targetUserId')
-    
+
     if not user_id:
         emit("error", {"message": "Not authenticated"}, to=request.sid)
         return
-    
+
     if not room_id or not target_user_id:
         emit("error", {"message": "Room ID and target user ID required"}, to=request.sid)
         return
@@ -476,19 +476,19 @@ def handle_remove_user(data):
 
         room_data = room_doc.to_dict()
         current_users = room_data.get("users", [])
-        
+
         if user_id not in current_users:
             emit("error", {"message": "You are not in this room"}, to=request.sid)
             return
-        
+
         if target_user_id not in current_users:
             emit("error", {"message": "Target user not in room"}, to=request.sid)
             return
-        
+
         if user_id == target_user_id:
             emit("error", {"message": "Cannot remove yourself"}, to=request.sid)
             return
-        
+
         current_users.remove(target_user_id)
         target_username = get_user_name(target_user_id)
         db.collection("rooms").document(room_id).update({"users": current_users})
@@ -498,7 +498,7 @@ def handle_remove_user(data):
             "type": "USER_REMOVED",
             "total_users": len(current_users)
         }, room=room_id)
-        
+
     except Exception as e:
         emit("error", {"message": f"Server error: {str(e)}"}, to=request.sid)
 
@@ -507,12 +507,11 @@ def handle_card_chosen(data):
     user_id = request.cookies.get('userId')
     room_id = data.get('roomId')
     chosen_card = data.get('card')
-    meteor_data = data.get('meteor')
-    
+
     if not user_id:
         emit("error", {"message": "Not authenticated"}, to=request.sid)
         return
-    
+
     if not room_id or not chosen_card:
         emit("error", {"message": "Room ID and card choice required"}, to=request.sid)
         return
@@ -527,21 +526,21 @@ def handle_card_chosen(data):
         game_state = room_data.get("game_state", {})
         current_hp = game_state.get("hp", 3)
         current_meteor = game_state.get("current_meteor", {})
-        
+
         is_correct_choice = validate_card_choice(chosen_card, current_meteor)
-        
+
         if not is_correct_choice:
             current_hp -= 1
-        
+
         game_state["hp"] = current_hp
-        
+
         if current_hp <= 0:
             game_state["status"] = "ended"
             db.collection("rooms").document(room_id).update({
                 "status": "ended",
                 "game_state": game_state
             })
-            
+
             emit("GAME_ENDED", {
                 "message": "Game Over! No lives remaining.",
                 "final_hp": current_hp
@@ -549,9 +548,9 @@ def handle_card_chosen(data):
         else:
             new_meteor = generate_random_meteor()
             game_state["current_meteor"] = new_meteor
-            
+
             db.collection("rooms").document(room_id).update({"game_state": game_state})
-            
+
             emit("round_result", {
                 "chosen_card": chosen_card,
                 "was_correct": is_correct_choice,
@@ -559,7 +558,7 @@ def handle_card_chosen(data):
                 "new_meteor": new_meteor,
                 "message": "Correct choice!" if is_correct_choice else "Wrong choice! -1 HP"
             }, room=room_id)
-        
+
     except Exception as e:
         emit("error", {"message": f"Server error: {str(e)}"}, to=request.sid)
 

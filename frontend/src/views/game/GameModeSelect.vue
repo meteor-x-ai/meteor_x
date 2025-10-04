@@ -112,7 +112,7 @@ const changeQueryMode = () => {
 }
 
 const initializeSocket = () => {
-    if (socket.value?.connected) {
+    if (socket.value) {
         return socket.value;
     }
 
@@ -167,7 +167,7 @@ const handleReturn = () => {
 };
 
 const codeManipulations = async () => {
-    if (currentMode.value === "create") {
+    if (currentMode.value === "create" && !socket.value) {
         try {
             const newSocket = initializeSocket();
 
@@ -210,7 +210,7 @@ const joinRoom = async () => {
 }
 
 const removeUser = (id: string) => {
-
+    console.log(id)
 }
 
 watch(currentMode, () => {
@@ -221,15 +221,17 @@ watch(currentMode, () => {
 onBeforeMount(async () => {
     currentUser.value = await authRepo.auth();
 
+    //TODO как то сохранять что бы в случае успеха норм редирекило
     if (currentUser.value && (route.query.mode === 'coop' || route.query.mode === 'create')) {
         currentMode.value = route.query.mode as modes;
     }
 
     changeQueryMode();
-    codeManipulations();
+    await codeManipulations();
 
     pendingAuth.value = false
 })
+
 onUnmounted(() => {
     cleanupSocket();
 });
