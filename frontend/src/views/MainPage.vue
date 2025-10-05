@@ -46,7 +46,7 @@
         <div class="content">
             <div class="info--container">
                 <h5>Meteor<span class="primary--text">X</span></h5>
-                <span class="info__description">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aut facere inventore iure minima modi omnis quaerat, rerum saepe ullam! Atque autem dolore expedita, fugit labore nisi perspiciatis quaerat sint voluptas!</span>
+                <span class="info__description">Educational game created as part of the NASA Space Apps Challenge 2025. Test yourself — choose the right action when a meteor is falling and save the planet! Learn to think fast, strategically, and responsibly.</span>
             </div>
 
             <div class="buttons-container">
@@ -79,25 +79,25 @@
                 <Card
                     image-url="/game-card/ROCKET.png"
                     title="Rocket Card"
-                    description="Launch it to smash meteors out of your way!"
+                    description="Intercept fast, heavy asteroids before impact.<br><br>Use when M > 50,000 kg, S > 30 km/s, and D < 10,000 km."
                     color="red"
                 />
                 <Card
                     image-url="/game-card/BUNKER.png"
                     title="Bunker Card"
-                    description="Dive in when the clock is ticking and danger looms."
+                    description="No time to escape — survive underground.<br><br>Choose when M ≤ 50,000 kg and D < 10,000 km."
                     color="green"
                 />
                 <Card
                     image-url="/game-card/EVACUATION.png"
                     title="Evacuation Card"
-                    description="Plan ahead and escape before chaos strikes."
+                    description="You have hours or days — relocate safely.<br><br>Go for it when D > 1,000,000 km."
                     color="orange"
                 />
                 <Card
                     image-url="/game-card/IGNORE.png"
                     title="Ignore Card"
-                    description="Let it pass—sometimes the best move is inaction."
+                    description="They’ll burn up completely — no action needed. <br><br>Best for M < 1,000 kg, S < 15 km/s, and ICE / ICE+STONE type."
                     color="purple"
                 />
             </div>
@@ -320,7 +320,7 @@
                 <Card
                     image-url="/landing/members/artur.jpg"
                     title="Artur Mauboroda"
-                    description="Random meteor functionality, Teleport to user location fixes"
+                    description="Frontend experiments"
                     color="primary"
                 >
                     <template #description>
@@ -332,6 +332,14 @@
                                 rel="noopener noreferrer"
                             >
                                 <GitHub />
+                            </a>
+                            <a
+                                class="description--link"
+                                href="https://t.me/@artuuuurrr"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <Telegram />
                             </a>
                         </div>
                     </template>

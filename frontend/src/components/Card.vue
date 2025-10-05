@@ -6,7 +6,7 @@
         </div>
        <div class="description--container">
            <slot name="description" />
-           <span class="description">{{description}}</span>
+           <span class="description" v-html="description"/>
        </div>
     </div>
 </template>
