@@ -65,29 +65,34 @@ def add_cors_vary_header(response):
     return response
 
 # Initialize Firebase
+db = None
 try:
     print("Initializing Firebase Admin SDK...")
     
     # Try to load from environment variable first (for Railway)
     firebase_creds_json = os.getenv("FIREBASE_CREDENTIALS")
     if firebase_creds_json:
-        import tempfile
-        # Create temporary file with credentials
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            f.write(firebase_creds_json)
-            temp_cred_path = f.name
-        cred = credentials.Certificate(temp_cred_path)
+        # Parse JSON directly from env variable
+        cred_dict = json.loads(firebase_creds_json)
+        cred = credentials.Certificate(cred_dict)
+        print("Using Firebase credentials from environment variable")
     else:
-        # Fallback to file
+        # Fallback to file (for local development)
         cred = credentials.Certificate("firebase-adminsdk.json")
+        print("Using Firebase credentials from file")
     
     firebase_admin.initialize_app(cred)
     db = firestore.client()
-    print("Firebase initialized successfully")
+    print("✅ Firebase initialized successfully")
+except FileNotFoundError:
+    print("⚠️  firebase-adminsdk.json not found and FIREBASE_CREDENTIALS env var not set")
+    print("⚠️  Running without Firebase - auth/database features disabled")
+except json.JSONDecodeError as e:
+    print(f"⚠️  Invalid JSON in FIREBASE_CREDENTIALS: {e}")
+    print("⚠️  Running without Firebase - auth/database features disabled")
 except Exception as e:
-    print(f"Firebase initialization error: {e}")
-    # Fallback: continue without Firebase
-    db = None
+    print(f"⚠️  Firebase initialization error: {e}")
+    print("⚠️  Running without Firebase - auth/database features disabled")
 
 data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'meteors.json')
 
