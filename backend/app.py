@@ -1,16 +1,17 @@
-from flask import Flask, request, jsonify, make_response
-from flask_cors import CORS
-import firebase_admin
-from flask_socketio import SocketIO, join_room, emit
-from firebase_admin import credentials, firestore
-from services.gemini_service import generate_from_prompt, calculate_casualties
+import os
+import uuid
+import json
 import bcrypt
 import random
 import string
-import json
-import uuid
-import os
+import firebase_admin
+
+from flask import Flask, request, jsonify, make_response
 from dotenv import load_dotenv
+from flask_cors import CORS
+from flask_socketio import SocketIO, join_room, emit
+from firebase_admin import credentials, firestore
+from services.gemini_service import generate_from_prompt, calculate_casualties
 
 load_dotenv()
 
