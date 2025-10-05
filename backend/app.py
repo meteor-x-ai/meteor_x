@@ -803,6 +803,37 @@ def handle_join_game(data):
     except Exception as e:
         emit("error", {"message": f"Server error: {str(e)}"}, to=request.sid)
 
+@socketio.on('close_room')
+def handle_close_room(data):
+    user_id = request.cookies.get('userId')
+    room_id = data.get('roomId')
+  
+    if not user_id:
+        emit("error", {"message": "Not authenticated"}, to=request.sid)
+        return
+    if not room_id:
+        emit("error", {"message": "Room ID required"}, to=request.sid)
+        return # tut proverka id and return
+    try:
+        room_doc = db.collection("rooms").document(room_id).get()
+        if not room_doc.exists:
+            emit("error", {"message": "Room not found"}, to=request.sid)
+            return
+        room_data = room_doc.to_dict()
+        creator_id = room_data.get("creator")
+        if user_id != creator_id:
+            emit("error", {"message": "Only room creator can close the room"}, to=request.sid)
+            return
+        emit("room_closed", {
+            "message": "Room has been closed by the creator",
+            "roomId": room_id
+        }, room=room_id)
+
+        db.collection("rooms").document(room_id).delete() #tut udelenie komnati
+        
+    except Exception as e:
+        emit("error", {"message": f"Server error: {str(e)}"}, to=request.sid)
+
 @socketio.on('leave_room')
 def handle_leave_room(data):
     user_id = request.cookies.get('userId')
