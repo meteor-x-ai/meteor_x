@@ -49,7 +49,7 @@ CORS(
     ],
     max_age=86400
 )
-socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS, async_mode="threading")
+socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS, async_mode="eventlet")
 
 
 @app.before_request
@@ -63,9 +63,17 @@ def add_cors_vary_header(response):
     response.headers.add('Vary', 'Origin')
     return response
 
-cred = credentials.Certificate("firebase-adminsdk.json")
-firebase_admin.initialize_app(cred)
-db = firestore.client()
+# Initialize Firebase
+try:
+    print("Initializing Firebase Admin SDK...")
+    cred = credentials.Certificate("firebase-adminsdk.json")
+    firebase_admin.initialize_app(cred)
+    db = firestore.client()
+    print("Firebase initialized successfully")
+except Exception as e:
+    print(f"Firebase initialization error: {e}")
+    # Fallback: try environment variable or continue without Firebase
+    db = None
 
 data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'meteors.json')
 
