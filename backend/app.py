@@ -17,13 +17,20 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# Production frontend URL
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://profound-faloodeh-f91fc7.netlify.app")
+
+# Parse allowed origins from env or use defaults
 raw_allowed_origins = os.getenv("ALLOWED_ORIGINS")
-default_origins = [FRONTEND_URL, "http://localhost:5173"]
 if raw_allowed_origins:
     ALLOWED_ORIGINS = [origin.strip() for origin in raw_allowed_origins.split(",") if origin.strip()]
 else:
-    ALLOWED_ORIGINS = default_origins
+    # Default: production frontend + local dev
+    ALLOWED_ORIGINS = [
+        "https://profound-faloodeh-f91fc7.netlify.app",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ]
 
 CORS(
     app,
