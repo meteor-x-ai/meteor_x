@@ -120,6 +120,7 @@ async function checkCardSuccess(card: iGameCard): Promise<boolean> {
             "accept": "application/json"
         },
         body: JSON.stringify({
+            // @ts-ignore
             generated_scenario: currentMeteor.value.generated_scenario,
             chosen_card: card.name
         })

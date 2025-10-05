@@ -1,4 +1,4 @@
-import type {iCalculatedData, iUserInput} from "@/models/meteor-models.ts";
+import type {iCalculatedData, iMeteor} from "@/models/meteor-models.ts";
 import {eWeatherType} from "@/enums/meteor-enums.ts";
 
 const RADIUS_TIMES_IN_SECONDS = [1800, 3600, 7200]
@@ -16,7 +16,7 @@ const getRadiusOverTime = (kineticEnergy: number, angleCoefficient: number, weat
     });
 }
 
-const computeCalculated = (u: iUserInput): iCalculatedData => {
+const computeCalculated = (u: iMeteor): iCalculatedData => {
     const v = u.speed * 1000;
     const m = u.mass;
     const E = 0.5 * m * v ** 2;
