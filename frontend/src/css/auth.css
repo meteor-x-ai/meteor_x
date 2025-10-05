@@ -18,6 +18,8 @@
     position: relative;
     z-index: 10;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    user-select: none;
+
 }
 
 .login--box h2 {
@@ -42,7 +44,7 @@
     border-radius: var(--border-sm);
     font-size: 1rem;
     background: var(--bg-color-disable) ;
-    color: var(--black);
+    color: var(--white);
     transition: border-color var(--tr-duration) ease, box-shadow var(--tr-duration) ease;
 }
 .input--field::placeholder,
@@ -75,7 +77,7 @@
     outline: none;
     font-size: 1rem;
     background: transparent;
-    color: var(--black);
+    color: var(--white);
 }
 
 .eye--btn {
