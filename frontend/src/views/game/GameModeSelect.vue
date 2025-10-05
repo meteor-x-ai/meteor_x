@@ -284,6 +284,12 @@ const startGame = async () => {
     socket.value.emit(eSocketEvent.START_GAME, { roomId: roomInfo.id });
 }
 
+const closeRoom = () => {
+    if (socket.value?.connected) {
+        socket.value.emit(eSocketEvent.CLOSE_ROOM, { roomId: roomInfo.id });
+    }
+}
+
 watch(currentMode, async () => {
     await changeQueryMode();
     await codeManipulations();

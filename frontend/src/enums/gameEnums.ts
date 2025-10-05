@@ -27,6 +27,7 @@ export enum eSocketEvent {
     ROOM_CHANGED = "room_changed",
     ROOM_CLOSED = "room_closed",
     ROOM_CREATED = "room_created",
+    CLOSE_ROOM = "close_room",
 
     //GAME
     START_GAME = "start_game",
