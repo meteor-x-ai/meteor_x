@@ -57,7 +57,7 @@
                 :class="{'card--item__disabled': !currentMeteor || pendingCardValidation}"
             >
                 <div class="card--name">{{card.name}}</div>
-                <img class="card--image" :src="`/game-card/${card.name}.webp`" alt="">
+                <img class="card--image" :src="`/game-card/${card.name}.png`" alt="">
             </div>
         </div>
     </div>
@@ -66,7 +66,7 @@
 <script setup lang="ts">
 import {computed, onMounted, reactive, ref} from "vue";
 import {useRoute} from "vue-router";
-import {eGameCardNames, eGameSocketEvent, eSocketEvent} from "@/enums/gameEnums.ts";
+import {eGameCardNames, eGameSocketEvent} from "@/enums/gameEnums.ts";
 import type {iGameMeteor} from "@/models/meteor-models.ts";
 import {type Socket} from "socket.io-client";
 import {BACK_PATH_API} from "@/repository/backendPath.ts";
