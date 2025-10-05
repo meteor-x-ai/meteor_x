@@ -6,7 +6,7 @@
     background: rgba(255, 255, 255, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
-    padding: 12px; /* Зменшено з 15px до 12px */
+    padding: 12px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-size: 14px;
     color: #333;
@@ -23,6 +23,7 @@
     color: #333;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    text-align: center;
 }
 
 .meteor--presets__container input,
@@ -46,12 +47,12 @@
     background: rgba(255, 255, 255, 0.95);
 }
 
-/* Стилі для dropdown - ВИПРАВЛЕНО */
+
 .meteor--presets__container .dropdown {
     position: relative;
     display: block;
-    width: 100%; /* Змінено з 100px на 100% */
-    margin-bottom: 12px; /* Повернемо до стандартного відступу */
+    width: 100%;
+    margin-bottom: 12px;
 }
 
 .meteor--presets__container .dropdown-btn {
@@ -87,12 +88,12 @@
     transform: rotate(180deg);
 }
 
-/* Стилі для кнопки Random Meteorite */
+
 .meteor--presets__container .random-meteor-btn {
     width: 100%;
     box-sizing: border-box;
     padding: 10px 8px;
-    margin-top: 8px; /* Додано відступ зверху */
+    margin-top: 8px;
     margin-bottom: 12px;
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
@@ -112,11 +113,10 @@
     transform: translateY(-1px);
 }
 
-/* Dropdown menu */
 .meteor--presets__container .dropdown-menu {
     position: absolute;
     top: 0;
-    right: 100%;
+    right: 115%;
     z-index: 9999;
     background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.3);

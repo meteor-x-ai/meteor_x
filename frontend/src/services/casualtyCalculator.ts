@@ -1,4 +1,4 @@
-import type { iMeteorPreset } from "@/models/meteor-models";
+import type { iMeteorPreset } from "@/models/meteor-models.ts";
 
 export class CasualtyCalculator {
     private meteor: iMeteorPreset;

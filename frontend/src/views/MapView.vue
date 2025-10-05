@@ -169,7 +169,8 @@
 </template>
 
 <script setup lang="ts">
-import L from "leaflet"
+import * as L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import {computed, nextTick, onMounted, reactive, ref, watch} from "vue";
 import "@/css/map-page.css";
 import {eMeteorMaterial, eMeteorType, eWeatherType} from "@/enums/meteor-enums.ts";
@@ -177,7 +178,7 @@ import type {iCalculatedData, iUserInput, iMeteorPreset} from "@/models/meteor-m
 import {computeCalculated, getZoomForRadius} from "@/services/meteorMathService.ts";
 import { meteorPresets } from "@/data/presets";
 import { generateRandomMeteor } from "@/data/random_meteor";
-import { CasualtyCalculator } from "@/services/casualtyCalculator";
+import { CasualtyCalculator } from "@/services/casualtyCalculator.ts";
 
 const SETTINGS_ZOOM_ANIMATION_DURATION: number = 1.5
 const SETTINGS_DEFAULT_ZOOM_COUNT: number = 5
@@ -502,7 +503,7 @@ const meteorClick = async () => {
   const latlng = new L.LatLng(meteor.latitude, meteor.longitude);
 
   if (!marker.value && map.value) {
-    marker.value = L.marker(latlng, { icon: customIcon }).addTo(map.value);
+    marker.value = L.marker(latlng, { icon: customIcon }).addTo(map.value as L.Map);
   } else if (marker.value) {
     marker.value.setLatLng(latlng);
   }
