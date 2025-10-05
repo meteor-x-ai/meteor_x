@@ -15,7 +15,64 @@ if genai:
         except Exception:
             model = None
 
-def generate_from_prompt(prompt: str):
+def generate_from_prompt(user_prompt: str):
+    if not model:
+        return {"data": f"Fake response for prompt: {user_prompt}"}
+
+    prompt = f"""
+    GENERATE A REALISTIC RANDOM METEOR WITH PHYSICAL PARAMETERS BASED ON KNOWN METEORITES.
+    
+    !!! IMPORTANT INSTRUCTIONS – READ CAREFULLY !!!
+    
+    1. YOU MUST OUTPUT STRICTLY ONE JSON OBJECT WITH THIS EXACT FORMAT:
+       {{
+           "data": {{
+               "mass": float,
+               "speed": float,
+               "angle": float,
+               "type": string,
+               "weather": string,
+               "material": string
+           }}
+       }}
+    
+    2. DO NOT USE MARKDOWN, DO NOT USE CODE BLOCKS, DO NOT WRITE ANY TEXT, COMMENTS, OR EXPLANATIONS.
+    
+    3. DATA RULES:
+    - mass: float, kg, range [0.1–1,000,000], smaller values more common
+    - speed: float, m/s, range [11,000–72,000]
+    - angle: float, degrees, range [15–90]
+    - type: one of ["Stony", "Iron", "Stony-Iron"] (STONY most common)
+    - weather: one of ["Clear", "Rain", "Snow", "Storm"]
+    - material must match type:
+      STONE -> "Stone"
+      IRON -> "Iron"
+      MIXED -> "Mixed"
+    
+    OUTPUT EXAMPLE (RAW JSON ONLY, STRICTLY):
+    {{
+    "data": {{
+        "mass": 850000.0,
+        "speed": 55000.0,
+        "angle": 35.0,
+        "type": "Stony",
+        "weather": "Clear",
+        "material": "Stone"
+        }}
+    }}
+    
+    USER PROMPT: {user_prompt}
+    """
+
+    try:
+        return model.generate_content(prompt).text
+    except Exception as e:
+        print(f"Error during generation: {e}")
+        return {"data": f"Error generating response for prompt: {prompt}"}
+
+def generate_random_meteor():
+    prompt = ''
+
     if not model:
         return {"data": f"Fake response for prompt: {prompt}"}
     try:
@@ -120,6 +177,51 @@ def calculate_casualties(meteor_data):
         return casualties
 
     except Exception as e:
+        print(f"Error calculating casualties with AI: {e}")
+        raise Exception(f"Failed to calculate casualties using AI: {str(e)}")
+
+
+def is_valid_meteor(data):
+    try:
+        required_fields = ["mass", "speed", "angle", "latitude", "longitude", "type", "weather", "material"]
+        if not all(field in data for field in required_fields):
+            return False
+
+        if not (0.1 <= data["mass"] <= 1000000):
+            return False
+        if not (11000 <= data["speed"] <= 72000):
+            return False
+        if not (15 <= data["angle"] <= 90):
+            return False
+        if not (-90 <= data["latitude"] <= 90):
+            return False
+        if not (-180 <= data["longitude"] <= 180):
+            return False
+
+        valid_types = ["STONY", "IRON", "STONY_IRON"]
+        valid_weathers = ["CLEAR", "RAIN", "SNOW", "STORM"]
+        valid_materials = ["STONE", "IRON", "MIXED"]
+
+        if data["type"] not in valid_types:
+            return False
+        if data["weather"] not in valid_weathers:
+            return False
+        if data["material"] not in valid_materials:
+            return False
+
+        type_material_map = {
+            "STONY": "STONE",
+            "IRON": "IRON",
+            "STONY_IRON": "MIXED"
+        }
+        if data["material"] != type_material_map[data["type"]]:
+            return False
+
+        return True
+
+    except (KeyError, TypeError, ValueError):
+        return False
+
         print(f"Error calculating casualties with AI: {e}")
         raise Exception(f"Failed to calculate casualties using AI: {str(e)}")
 
