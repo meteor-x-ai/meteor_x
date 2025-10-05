@@ -66,13 +66,26 @@ def add_cors_vary_header(response):
 # Initialize Firebase
 try:
     print("Initializing Firebase Admin SDK...")
-    cred = credentials.Certificate("firebase-adminsdk.json")
+    
+    # Try to load from environment variable first (for Railway)
+    firebase_creds_json = os.getenv("FIREBASE_CREDENTIALS")
+    if firebase_creds_json:
+        import tempfile
+        # Create temporary file with credentials
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            f.write(firebase_creds_json)
+            temp_cred_path = f.name
+        cred = credentials.Certificate(temp_cred_path)
+    else:
+        # Fallback to file
+        cred = credentials.Certificate("firebase-adminsdk.json")
+    
     firebase_admin.initialize_app(cred)
     db = firestore.client()
     print("Firebase initialized successfully")
 except Exception as e:
     print(f"Firebase initialization error: {e}")
-    # Fallback: try environment variable or continue without Firebase
+    # Fallback: continue without Firebase
     db = None
 
 data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'meteors.json')
