@@ -200,6 +200,72 @@ def calculate_casualties(meteor_data):
         print(f"Error during generation: {e}")
         return {"data": f"Error generating response for prompt: {prompt}"}
 
+
+def generate_random_meteor():
+    prompt = """
+    Create a realistic random meteor with physical parameters based on known meteorites.
+
+    Parameters to generate:
+    - mass: mass in kg (0.1 to 1,000,000 kg, smaller values more common)
+    - speed: atmospheric entry speed in m/s (11,000-72,000 m/s)
+    - angle: entry angle to horizon in degrees (15-90°)
+    - latitude: impact latitude (-90 to 90)
+    - longitude: impact longitude (-180 to 180)
+    - type: meteor type ("STONY", "IRON", "STONY_IRON") - stony most common
+    - weather: weather conditions ("CLEAR", "RAIN", "SNOW", "STORM")
+    - material: material ("STONE", "IRON", "MIXED") - must match type
+
+    Type-Material mapping:
+    STONY -> STONE
+    IRON -> IRON  
+    STONY_IRON -> MIXED
+
+    Return ONLY JSON format:
+    {
+        "mass": number,
+        "speed": number,
+        "angle": number,
+        "latitude": number,
+        "longitude": number,
+        "type": "string",
+        "weather": "string",
+        "material": "string"
+    }
+    """
+
+    if not model:
+        return create_fallback_meteor()
+
+    try:
+        response = model.generate_content(prompt)
+        response_text = response.text.strip()
+
+        # Clean markdown formatting if present
+        if response_text.startswith('```'):
+            lines = response_text.split('\n')
+            json_lines = []
+            in_json = False
+            for line in lines:
+                if line.startswith('```'):
+                    in_json = not in_json
+                    continue
+                if in_json:
+                    json_lines.append(line)
+            response_text = '\n'.join(json_lines)
+
+        meteor_data = json.loads(response_text)
+
+        if is_valid_meteor(meteor_data):
+            return meteor_data
+        else:
+            print("Generated data failed validation, using fallback")
+            return create_fallback_meteor()
+
+    except (json.JSONDecodeError, Exception) as e:
+        print(f"Error generating meteor with AI: {e}")
+        return create_fallback_meteor()
+
+
 def create_fallback_meteor():
     meteor_type_chance = random.random()
     if meteor_type_chance < 0.86:
