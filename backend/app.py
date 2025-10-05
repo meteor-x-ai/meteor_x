@@ -1,5 +1,5 @@
-import eventlet
-eventlet.monkey_patch()
+from gevent import monkey
+monkey.patch_all()
 
 import os
 import uuid
@@ -49,7 +49,7 @@ CORS(
     ],
     max_age=86400
 )
-socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS, async_mode="eventlet")
+socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS, async_mode="gevent")
 
 
 @app.before_request

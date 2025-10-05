@@ -1,5 +1,6 @@
 gunicorn
-eventlet
+gevent
+gevent-websocket
 numpy
 flask
 flask-cors
