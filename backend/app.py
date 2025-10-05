@@ -17,16 +17,41 @@ load_dotenv()
 
 app = Flask(__name__)
 
-FRONTEND_URL = "https://profound-faloodeh-f91fc7.netlify.app"
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://profound-faloodeh-f91fc7.netlify.app")
+raw_allowed_origins = os.getenv("ALLOWED_ORIGINS")
+default_origins = [FRONTEND_URL, "http://localhost:5173"]
+if raw_allowed_origins:
+    ALLOWED_ORIGINS = [origin.strip() for origin in raw_allowed_origins.split(",") if origin.strip()]
+else:
+    ALLOWED_ORIGINS = default_origins
 
 CORS(
     app,
-    origins=[FRONTEND_URL],
+    resources={r"/*": {"origins": ALLOWED_ORIGINS}},
     supports_credentials=True,
-    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"]
+    methods=["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "X-Requested-With",
+        "Origin",
+        "Accept"
+    ],
+    max_age=86400
 )
-socketio = SocketIO(app, cors_allowed_origins=FRONTEND_URL, async_mode="threading")
+socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS, async_mode="threading")
+
+
+@app.before_request
+def handle_preflight():
+    if request.method == 'OPTIONS':
+        return make_response('', 204)
+
+
+@app.after_request
+def add_cors_vary_header(response):
+    response.headers.add('Vary', 'Origin')
+    return response
 
 cred = credentials.Certificate("firebase-adminsdk.json")
 firebase_admin.initialize_app(cred)
