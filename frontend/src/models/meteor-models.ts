@@ -8,7 +8,7 @@ export interface iGameMeteor {
     timeToImpact: number;
 }
 
-export interface iUserInput {
+export interface iMeteor {
     year: number;
     mass: number;
     speed: number;

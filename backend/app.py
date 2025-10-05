@@ -43,7 +43,7 @@ def get_meteors():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/prompt', methods=['GET'])
+@app.route('/api/prompt', methods=['GET'])
 def prompt_handler():
     prompt = request.args.get('prompt')
     if not prompt:
