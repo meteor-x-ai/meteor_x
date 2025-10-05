@@ -28,23 +28,11 @@ cred = credentials.Certificate("firebase-adminsdk.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+socketio = SocketIO(app, cors_allowed_origins="https://profound-faloodeh-f91fc7.netlify.app/", async_mode="threading")
 
 data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'meteors.json')
 
 # auth endpoints
-
-@app.before_request
-def handle_options():
-    if request.method == "OPTIONS":
-        resp = make_response()
-        resp.headers["Access-Control-Allow-Origin"] = request.headers.get("Origin")
-        resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-        resp.headers["Access-Control-Allow-Headers"] = request.headers.get(
-            "Access-Control-Request-Headers", "Authorization, Content-Type"
-        )
-        resp.headers["Access-Control-Allow-Credentials"] = "true"
-        return resp
 
 @app.route('/api/test/login', methods=['POST'])
 def test_login():
