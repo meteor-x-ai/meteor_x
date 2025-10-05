@@ -16,13 +16,33 @@ from services.gemini_service import generate_from_prompt, calculate_casualties
 load_dotenv()
 
 app = Flask(__name__)
+
+FRONTEND_URL = "https://profound-faloodeh-f91fc7.netlify.app"
+
 CORS(
     app,
-    origins=["https://profound-faloodeh-f91fc7.netlify.app"],
+    origins=[FRONTEND_URL],
     supports_credentials=True,
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"]
 )
 
-socketio = SocketIO(app, cors_allowed_origins="https://profound-faloodeh-f91fc7.netlify.app")
+socketio = SocketIO(
+    app,
+    cors_allowed_origins=[FRONTEND_URL],
+    async_mode="threading"
+)
+
+@app.before_request
+def handle_options():
+    from flask import request, make_response
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers['Access-Control-Allow-Origin'] = FRONTEND_URL
+        response.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
+        return response
 
 cred = credentials.Certificate("firebase-adminsdk.json")
 firebase_admin.initialize_app(cred)

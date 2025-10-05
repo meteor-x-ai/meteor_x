@@ -28,7 +28,7 @@
                 </router-link>
                 <a
                     class="router-link"
-                    href="https://github.com/deniSSTK"
+                    href="https://github.com/meteor-x-ai/meteor_x/tree/developer"
                     target="_blank"
                     rel="noopener noreferrer"
                 >
@@ -353,7 +353,7 @@
                 </a>
                 <a
                     class="router-link"
-                    href="https://github.com/deniSSTK"
+                    href="https://github.com/meteor-x-ai/meteor_x/tree/developer"
                     target="_blank"
                     rel="noopener noreferrer"
                 >
