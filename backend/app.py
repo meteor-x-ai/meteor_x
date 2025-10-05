@@ -19,9 +19,8 @@ app = Flask(__name__)
 
 FRONTEND_URL = "https://profound-faloodeh-f91fc7.netlify.app"
 
-CORS(app, origins=[FRONTEND_URL], supports_credentials=True)
-
-socketio = SocketIO(app, cors_allowed_origins=FRONTEND_URL, async_mode="threading")
+CORS(app, origins="*", supports_credentials=True)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 cred = credentials.Certificate("firebase-adminsdk.json")
 firebase_admin.initialize_app(cred)
