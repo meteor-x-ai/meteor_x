@@ -1,7 +1,7 @@
 <template>
     <div class="card" :class="color">
         <div class="container">
-            <img :src="imageUrl" :alt="imageUrl.split('/').pop()!.replace('.jpg', '')"/>
+            <img v-if="imageUrl" :src="imageUrl" :alt="imageUrl.split('/').pop()!.replace('.jpg', '')"/>
             <span :class="color">{{title}}</span>
         </div>
        <div class="description--container">
@@ -14,7 +14,7 @@
 <script setup lang="ts">
 defineProps<{
     title: string;
-    imageUrl: string;
+    imageUrl?: string;
     description: string;
     color: 'green' | 'red' | 'orange' | 'purple' | 'primary';
 }>()

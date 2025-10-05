@@ -130,27 +130,22 @@
             </div>
 
             <div class="cards--container">
-                <!--TODO change images-->
                 <Card
-                    image-url="/change"
                     title="AI Meteor Generator"
                     description="Unleash meteors created by AI and test your planet's defenses."
                     color="red"
                 />
                 <Card
-                    image-url="/change"
                     title="AI Casualty Counter"
                     description="Let AI calculate potential casualties from incoming meteors."
                     color="green"
                 />
                 <Card
-                    image-url="/change"
                     title="Timeline Inspection"
                     description="Preview the destruction at 30 minutes, 1 hour, and 2 hours intervals."
                     color="orange"
                 />
                 <Card
-                    image-url="/change"
                     title="And Much More"
                     description="Teleport to any user, use real meteor data, enter watch mode, and explore additional features."
                     color="purple"
@@ -173,7 +168,6 @@
             </div>
 
             <div class="cards--container">
-                <!--TODO change images-->
                 <Card
                     image-url="/landing/members/denis.jpg"
                     title="Denis Tkachenko"
@@ -409,14 +403,12 @@ const savePlanetGameImages: string[] = [
 ]
 
 const savePlanetCoopImages: string[] = [
-    'game.png', //todo change to login screenshots
+    'game.png',
     'coop.png',
     'room.png',
-    'game.png', //todo change to game screenshots
 ]
 
 const createMeteorSandboxImages: string[] = [
-    //TODO change images
     'game.png',
     'coop.png',
 ]
