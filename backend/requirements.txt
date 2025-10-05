@@ -1,3 +1,11 @@
+gunicorn
+gevent
+gevent-websocket
 numpy
+flask
+flask-cors
+flask-socketio
 google-generativeai
 firebase-admin
+bcrypt
+python-dotenv

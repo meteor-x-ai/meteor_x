@@ -45,7 +45,7 @@ const routes = [
                 component: GamePage
             },
             {
-                path: 'coop/:roomId',
+                path: 'coop/:roomCode',
                 name: 'game-coop-mode',
                 component: GamePage
             }

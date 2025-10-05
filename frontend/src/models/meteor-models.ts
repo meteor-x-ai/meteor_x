@@ -1,6 +1,14 @@
 import {eMeteorMaterial, eMeteorType, type eWeatherType} from "@/enums/meteor-enums.ts";
 
-export interface iUserInput {
+export interface iGameMeteor {
+    id: number;
+    weight: number;
+    distance: number;
+    speed: number;
+    timeToImpact: number;
+}
+
+export interface iMeteor {
     year: number;
     mass: number;
     speed: number;
