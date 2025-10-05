@@ -20,15 +20,13 @@ CORS(
     app,
     origins=["https://profound-faloodeh-f91fc7.netlify.app"],
     supports_credentials=True,
-    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"]
 )
+
+socketio = SocketIO(app, cors_allowed_origins="https://profound-faloodeh-f91fc7.netlify.app")
 
 cred = credentials.Certificate("firebase-adminsdk.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
-
-socketio = SocketIO(app, cors_allowed_origins="https://profound-faloodeh-f91fc7.netlify.app/", async_mode="threading")
 
 data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'meteors.json')
 
