@@ -1,0 +1,350 @@
+.progress--bar {
+    width: 5px;
+    height: 100px;
+
+    position: fixed;
+    top: 50%;
+    right: var(--padding);
+
+    background-color: var(--bg-color);
+    transform: translateY(-50%);
+    border-radius: var(--border-sm);
+    overflow: hidden;
+
+    z-index: 1000;
+
+    &__fill {
+        position: absolute;
+
+        top: 0;
+        left: 0;
+
+        width: 100%;
+        height: 10px;
+        background-color: var(--primary-color);
+    }
+}
+
+.page {
+    --primary-bg: rgba(var(--primary-color-n), 0.2);
+
+    width: 100%;
+    height: 100dvh;
+
+    display: flex;
+    flex-direction: column;
+    background-color: var(--black);
+
+    color: var(--white);
+
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    z-index: 1;
+    user-select: none;
+
+    &::-webkit-scrollbar {
+        width: 0;
+    }
+
+    .primary--text {
+        color: var(--primary-color);
+
+        font-size: inherit;
+        text-shadow: 0 0 5px var(--primary-color);
+    }
+
+    .banner {
+        width: 100%;
+        padding: var(--padding);
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        backdrop-filter: blur(20px);
+        z-index: 100;
+
+        &.banner--header {
+            top: 0;
+            left: 0;
+            position: sticky;
+        }
+
+        .banner--name {
+            position: absolute;
+            top: auto;
+            left: calc(var(--padding) * 2);
+
+            font-size: var(--font-xl);
+            color: var(--white);
+        }
+
+        .banner--nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            gap: var(--gap);
+
+            .router-link {
+                padding: var(--padding);
+                border-radius: var(--border-sm);
+
+                position: relative;
+
+                text-decoration: none;
+                color: var(--white);
+
+                transition: var(--tr-duration);
+
+                &:hover {
+                    background-color: var(--primary-bg);
+                    box-shadow: var(--primary-bg);
+                }
+
+                .router-link__number {
+                    color: var(--primary-color);
+                }
+            }
+        }
+    }
+
+    .content {
+        width: 100%;
+        margin-top: var(--gap);
+
+        display: flex;
+        flex-direction: column;
+        gap: var(--gap);
+
+        .line {
+            width: 100%;
+            height: 1px;
+            background-color: rgba(var(--white-n), 0.1);
+        }
+
+        .swiper--container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--gap);
+        }
+
+        .info--container {
+            width: 100%;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            text-align: center;
+
+            gap: var(--gap-sm);
+
+            h5 {
+                margin: 0;
+                font-size: var(--font-xxl);
+            }
+
+            .info__description {
+                width: 40%;
+            }
+        }
+
+        .buttons-container {
+            width: 100%;
+
+            display: flex;
+            justify-content: center;
+
+            gap: var(--gap);
+
+            .button {
+                padding: var(--padding);
+
+                border: 1px solid var(--white);
+
+                position: relative;
+                cursor: pointer;
+                transition: var(--tr-duration);
+
+                text-decoration: none;
+                color: var(--black);
+                background: var(--white);
+
+                box-shadow: 0 0 0 0 transparent;
+
+                &:hover {
+                    background-color: var(--black);
+                    color: var(--white);
+                    box-shadow: -10px 10px 0 0 var(--primary-color);
+                }
+            }
+        }
+
+        .mySwiper {
+            height: 400px;
+            width: 100%;
+
+            img {
+                height: 100%;
+
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+
+                padding: var(--padding);
+
+                border-radius: var(--border-md);
+                background: rgba(var(--white-n), 0.1);
+                border: 1px solid rgba(var(--white-n), .2);
+
+                object-fit: cover;
+            }
+        }
+    }
+
+    .cards--container {
+        width: 100%;
+        padding: 0 var(--padding);
+
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+
+        flex-wrap: wrap;
+
+        gap: var(--gap);
+
+        &:has(.card:hover) .card:not(:hover) {
+            opacity: 0.5;
+            filter: grayscale(.5);
+            transition-delay: var(--tr-duration);
+        }
+
+        .card {
+            --border--opacity: 0.5;
+            --bg--opacity-start: 0.1;
+            --bg--opacity-mid: 0.2;
+            --bg--opacity-end: 0.1;
+
+            width: 200px;
+
+            display: flex;
+            gap: var(--gap-sm);
+            padding: var(--padding);
+
+            flex-direction: column;
+
+            backdrop-filter: blur(8px);
+            border-radius: var(--border-md);
+            border: 1px solid;
+
+            text-align: center;
+            transition: var(--tr-duration);
+
+            @mixin gradient-bg($color) {
+                background: linear-gradient(
+                        to right,
+                        rgba($color, var(--bg--opacity-start)) 0%,
+                        rgba($color, var(--bg--opacity-mid)) 50%,
+                        rgba($color, var(--bg--opacity-end)) 100%
+                );
+                border-color: rgba($color, var(--border--opacity));
+
+                &:hover {
+                    border-color: rgb($color);
+                    box-shadow: 0 0 20px rgb($color);
+                    transition-delay: var(--tr-duration);
+                }
+            }
+
+            &.red { @include gradient-bg(var(--red-n)); }
+            &.green { @include gradient-bg(var(--green-n)); }
+            &.orange { @include gradient-bg(var(--orange-n)); }
+            &.purple { @include gradient-bg(var(--purple-n)); }
+            &.primary { @include gradient-bg(var(--primary-color-n)); }
+
+            &:hover .container img {
+                border-radius: 50%;
+            }
+
+            @mixin card-name-bg($color) {
+                color: rgb($color);
+                background: rgba($color, 0.2);
+            }
+
+            .container {
+                display: flex;
+                flex-direction: column;
+                gap: var(--gap-sm);
+                align-items: center;
+
+                img {
+                    width: 150px;
+                    height: 150px;
+
+                    border-radius: var(--border-md);
+                    object-fit: cover;
+
+                    transition: var(--tr-duration);
+                }
+
+                span {
+                    padding: 5px 10px;
+                    border-radius: var(--border-sm);
+
+                    &.red { @include card-name-bg(var(--red-n)) }
+                    &.green { @include card-name-bg(var(--green-n)) }
+                    &.orange { @include card-name-bg(var(--orange-n)) }
+                    &.purple { @include card-name-bg(var(--purple-n)) }
+                }
+            }
+
+            .description--container {
+                display: flex;
+                flex-direction: column;
+                gap: var(--gap-sm);
+
+                flex-wrap: wrap;
+
+                .description--link__container {
+                    width: 100%;
+                    display: flex;
+
+                    align-items: center;
+                    justify-content: center;
+                    gap: 5px;
+
+                    .description--link {
+                        text-decoration: none;
+                        padding: 5px;
+                        border-radius: var(--border-sm);
+                        width: max-content;
+
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+
+                        transition: var(--tr-duration);
+
+                        @include card-name-bg(var(--primary-color-n));
+
+                        svg {
+                            width: 20px;
+                            height: 20px;
+
+                            path {
+                                fill: var(--primary-color);
+                            }
+                        }
+
+                        &:hover {
+                            transform: scale(1.1);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
