@@ -34,6 +34,18 @@ data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'me
 
 # auth endpoints
 
+@app.before_request
+def handle_options():
+    if request.method == "OPTIONS":
+        resp = make_response()
+        resp.headers["Access-Control-Allow-Origin"] = request.headers.get("Origin")
+        resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        resp.headers["Access-Control-Allow-Headers"] = request.headers.get(
+            "Access-Control-Request-Headers", "Authorization, Content-Type"
+        )
+        resp.headers["Access-Control-Allow-Credentials"] = "true"
+        return resp
+
 @app.route('/api/test/login', methods=['POST'])
 def test_login():
     test_user_id = "test-user-123"
