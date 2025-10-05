@@ -1,3 +1,4 @@
+
 .game--mode__button--container {
     position: fixed;
     left: 50%;
@@ -8,12 +9,13 @@
     padding: 15px;
     display: flex;
     gap: 15px;
+    z-index: 1;
     border-radius: var(--border-lg);
     flex-direction: column;
-
     background-color: var(--bg-color-container);
     border: 1px solid var(--white);
     backdrop-filter: blur(40px);
+    color: var(--white);
 
     transition: all var(--tr-duration);
 }
@@ -51,16 +53,21 @@
     color: var(--white);
 
     transition: all var(--tr-duration);
-    animation: show--animation var(--tr-duration);
-}
+    animation: show--scale__animation var(--tr-duration);
 
-.game--mode__button:hover {
-    gap: 15px;
-    box-shadow: 0 0 5px 2px rgba(var(--white-n), 0.5);
-}
+    &:not(:disabled):hover {
+        gap: 15px;
+        box-shadow: 0 0 5px 2px rgba(var(--white-n), 0.5);
+    }
 
-.game--mode__button:disabled {
-    opacity: .5;
+    &:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+    }
+
+    &.return {
+        font-size: var(--font-md);
+    }
 }
 
 .game--mode__input {
@@ -78,16 +85,16 @@
     backdrop-filter: blur(3px);
 
     transition: all var(--tr-duration);
-    animation: show--animation var(--tr-duration);
-}
+    animation: show--scale__animation var(--tr-duration);
 
-.game--mode__input::placeholder {
-    color: rgba(var(--white-n), 0.5);
-}
+    &::placeholder {
+        color: rgba(var(--white-n), 0.5);
+    }
 
-.game--mode__input:focus {
-    border-color: var(--white);
-    outline: none;
+    &:focus {
+        border-color: var(--white);
+        outline: none;
+    }
 }
 
 .button__container {
@@ -96,17 +103,77 @@
     width: 100%;
 }
 
+.loading--animation {
+    animation: blinking__animation 2s infinite;
+}
+
+.user--container {
+    transition: all var(--tr-duration);
+    width: max-content;
+
+    cursor: default;
+}
+
+.user--container:not(.current):not(.user--container--room):hover {
+    color: var(--red);
+    background-color: rgba(var(--red-n), .1);
+
+    cursor: pointer;
+}
+
+.login--info--container {
+    min-width: 100px;
+    height: 50px;
+    border-radius: var(--border-md);
+    background-color: var(--bg-color-container);
+    backdrop-filter: var(--bacdrop-filter-md);
+
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    padding: 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--white);
+
+    user-select: none;
+    transition: all var(--tr-duration);
+    animation: show--scale__animation var(--tr-duration);
+
+    &.unauthenticated {
+        cursor: pointer;
+        background-color: rgba(var(--red-n), .3);
+        text-decoration: none;
+
+        a {
+            color: var(--white);
+            font-weight: normal;
+            text-decoration: none;
+        }
+
+        &:hover {
+            background-color: rgba(var(--red-n), .5);
+        }
+    }
+}
+
+@keyframes blinking__animation {
+    0%, 40% {
+        opacity: 1;
+    }
+    20% {
+        opacity: .6;
+    }
+}
+
 @keyframes pulse__animation {
     0%, 100% {
         text-shadow: 0 0 10px rgba(var(--white-n),0.6);
     }
     50% {
         text-shadow: 0 0 30px rgba(var(--white-n),1);
-    }
-}
-
-@keyframes show--animation {
-    from {
-        transform: scale(0);
     }
 }

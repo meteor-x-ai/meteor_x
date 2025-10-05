@@ -123,7 +123,6 @@ import "@/css/map-page.css";
 import {eMeteorMaterial, eMeteorType, eWeatherType} from "@/enums/meteor-enums.ts";
 import type {iUserInput } from "@/models/meteor-models.ts";
 import {getZoomForRadius} from "@/services/meteorMathService.ts";
-import {predictMeteor} from "@/services/generateDataService.ts";
 
 const SETTINGS_ZOOM_ANIMATION_DURATION: number = 1.5
 const SETTINGS_DEFAULT_ZOOM_COUNT: number = 5
@@ -246,10 +245,6 @@ const clearCirclesAndTarget = () => {
 
 const meteorClick = async () => {
     clearCircles();
-
-    const predict = (await predictMeteor(meteor)).prediction
-    console.log(meteor)
-    console.log(predict)
 
     const craterRadius = predict.crater_radius_inner + predict.crater_radius_middle + predict.crater_radius_outer;
 
