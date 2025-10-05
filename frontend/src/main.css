@@ -5,38 +5,42 @@
     --black: rgb(var(--black-n));
 
     --red-n: 205, 92, 92;
-    --green-n: 102, 225, 178;
+    --green-n: 0, 250, 154;
     --orange-n: 255, 127, 80;
     --purple-n: 138, 43, 226;
 
     --red: rgb(var(--red-n));
-    --grey: #bbb;
     --green: rgb(var(--green-n));
     --orange: rgb(var(--orange-n));
     --purple: rgb(var(--purple-n));
-    --yellow: #c5c567;
+    --yellow: yellow;
 
     --primary-color-n: 68, 124, 215;
     --primary-color: rgb(var(--primary-color-n));
     --primary-hover: #284d9d;
     --primary-color-alpha: rgba(59, 130, 246, 0.2);
+    --error-color: #960018;
+    --grey-border: #bbb;
+
+    --border-sm: 10px;
+    --border-md: calc(var(--border-sm) * 2);
+    --border-lg: calc(var(--border-sm) * 3);
+
 
     --bg-color: rgba(var(--white-n), 0.5);
     --bg-color-hover: rgba(var(--white-n), 0.8);
     --bg-color-disable: rgba(var(--white-n), 0.1);
     --bg-color-container: rgba(var(--white-n), 0.2);
 
+    --bg-placeholder: var(#474747);
+
+
     --bacdrop-filter-sm: blur(4px);
     --bacdrop-filter-md: blur(12px);
-
-    --border-sm: 8px;
-    --border-md: calc(var(--border-sm) * 2);
-    --border-lg: calc(var(--border-sm) * 3);
 
     --font-md: .9rem;
     --font-xl: 1.5rem;
     --font-xxl: 4rem;
-
     --tr-duration: .2s;
 
     --gap-sm: 15px;
@@ -51,10 +55,20 @@
 }
 
 html, body {
+    height: 100dvh;
+    width: 100%;
+
     margin: 0;
     padding: 0;
-    height: 100dvh;
-    width: 100vw;
+
+    overflow-x: hidden;
+    scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
 }
 
 button {

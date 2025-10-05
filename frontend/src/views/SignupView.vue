@@ -1,70 +1,70 @@
 <template>
-    <AuthLayout>
-        <div class="login--container">
-            <div class="login--box">
-                <h2>Sign Up</h2>
-                <p class="welcome--text">Create your account ✨</p>
+    <Particles />
+    <div class="login--container">
+        <div class="login--box">
+            <h2>Sign Up</h2>
+            <p class="welcome--text">Create your account ✨</p>
 
-                <form @submit.prevent="signupWrapper">
+            <form @submit.prevent="signupWrapper">
+                <input
+                    required
+                    v-model="username"
+                    type="text"
+                    placeholder="Username"
+                    class="input--field"
+                    @input="onUsernameInput"
+                />
+
+                <div class="password--field">
                     <input
                         required
-                        v-model="username"
-                        type="text"
-                        placeholder="Username"
-                        class="input--field"
-                        @input="onUsernameInput"
+                        v-model="passwordInput"
+                        :type="showPassword ? 'text' : 'password'"
+                        placeholder="Password"
+                        @input="onPasswordInput"
                     />
+                    <button type="button" class="eye--btn" @click="showPassword = !showPassword">
+                        <Eye v-if="showPassword" class="eye--icon"/>
+                        <EyeOff v-else class="eye--icon"/>
+                    </button>
+                </div>
 
-                    <div class="password--field">
-                        <input
-                            required
-                            v-model="passwordInput"
-                            :type="showPassword ? 'text' : 'password'"
-                            placeholder="Password"
-                            @input="onPasswordInput"
-                        />
-                        <button type="button" class="eye--btn" @click="showPassword = !showPassword">
-                            <Eye v-if="showPassword" class="eye--icon"/>
-                            <EyeOff v-else class="eye--icon"/>
-                        </button>
-                    </div>
+                <div class="password--field">
+                    <input
+                        required
+                        v-model="confirmPassword"
+                        :type="showConfirmPassword ? 'text' : 'password'"
+                        placeholder="Confirm Password"
+                        @input="onConfirmPassword"
+                    />
+                    <button type="button" class="eye--btn" @click="showConfirmPassword = !showConfirmPassword">
+                        <Eye v-if="showConfirmPassword" class="eye--icon"/>
+                        <EyeOff v-else class="eye--icon"/>
+                    </button>
+                </div>
 
-                    <div class="password--field">
-                        <input
-                            required
-                            v-model="confirmPassword"
-                            :type="showConfirmPassword ? 'text' : 'password'"
-                            placeholder="Confirm Password"
-                            @input="onConfirmPassword"
-                        />
-                        <button type="button" class="eye--btn" @click="showConfirmPassword = !showConfirmPassword">
-                            <Eye v-if="showConfirmPassword" class="eye--icon"/>
-                            <EyeOff v-else class="eye--icon"/>
-                        </button>
-                    </div>
-
-                    <p v-if="submitted && passwordInput!==confirmPassword" class="error--text">
-                        Password doesn't match
-                    </p>
-
-                    <button type="submit" class="login--button">Sign Up</button>
-                </form>
-
-                <p class="signup--text">
-                    Already have an account?
-                    <router-link :to="{ name: 'login-page' }" class="link">Login</router-link>
+                <p v-if="submitted && passwordInput!==confirmPassword" class="error--text">
+                    Password doesn't match
                 </p>
-            </div>
+
+                <button type="submit" class="login--button">Sign Up</button>
+            </form>
+
+            <p class="signup--text">
+                Already have an account?
+                <router-link :to="{ name: 'login-page' }" class="link">Login</router-link>
+            </p>
         </div>
-    </AuthLayout>
+    </div>
 </template>
 
 <script setup lang="ts">
-import AuthLayout from "@/views/Auth.vue"
 import authRepo from "@/repository/authRepo.ts"
 import { ref } from "vue"
 import { useRouter } from "vue-router"
 import { Eye, EyeOff } from 'lucide-vue-next'
+import "@/css/auth.css";
+import Particles from "@components/Particles.vue";
 
 
 const router = useRouter()
