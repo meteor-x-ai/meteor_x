@@ -16,7 +16,7 @@ from services.gemini_service import generate_from_prompt, calculate_casualties
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
+CORS(app, origins=["https://profound-faloodeh-f91fc7.netlify.app/"], supports_credentials=True)
 
 cred = credentials.Certificate("firebase-adminsdk.json")
 firebase_admin.initialize_app(cred)
